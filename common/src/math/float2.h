@@ -1,54 +1,54 @@
 #pragma once
-#ifndef FLOAT2_H
-#define FLOAT2_H
+#ifndef Float2_H
+#define Float2_H
 
 namespace common {
-	struct float2 {
+	struct Float2 {
 		float x, y;
 
-		float2();
-		float2(float f);
-		float2(float x, float y);
+		Float2();
+		Float2(float f);
+		Float2(float x, float y);
 
 		//negation
-		float2 operator-() const;
+		Float2 operator-() const;
 
 		//addition
-		float2 operator+(const float2 o) const;
-		float2 operator+(const float f) const;
-		float2& operator+=(const float2 o);
-		float2& operator+=(const float f);
+		Float2 operator+(const Float2 o) const;
+		Float2 operator+(const float f) const;
+		Float2& operator+=(const Float2 o);
+		Float2& operator+=(const float f);
 
 		//subtraction
-		float2 operator-(const float2 o) const;
-		float2 operator-(const float f) const;
-		float2& operator-=(const float2 o);
-		float2& operator-=(const float f);
+		Float2 operator-(const Float2 o) const;
+		Float2 operator-(const float f) const;
+		Float2& operator-=(const Float2 o);
+		Float2& operator-=(const float f);
 
 		//multiplication
-		float2 operator*(const float2 o) const;
-		float2 operator*(const float f) const;
-		float2& operator*=(const float2 o);
-		float2& operator*=(const float f);
+		Float2 operator*(const Float2 o) const;
+		Float2 operator*(const float f) const;
+		Float2& operator*=(const Float2 o);
+		Float2& operator*=(const float f);
 
 		//division
-		float2 operator/(const float2 o) const;
-		float2 operator/(const float f) const;
-		float2& operator/=(const float2 o);
-		float2& operator/=(const float f);
+		Float2 operator/(const Float2 o) const;
+		Float2 operator/(const float f) const;
+		Float2& operator/=(const Float2 o);
+		Float2& operator/=(const float f);
 	};
 
-	float2 operator+(float f, const float2 o);
-	float2 operator-(float f, const float2 o);
-	float2 operator*(float f, const float2 o);
-	float2 operator/(float f, const float2 o);
+	Float2 operator+(float f, const Float2 o);
+	Float2 operator-(float f, const Float2 o);
+	Float2 operator*(float f, const Float2 o);
+	Float2 operator/(float f, const Float2 o);
 
-	float dot(const float2 a, const float2 b);
+	float dot(const Float2 a, const Float2 b);
 
-	float length(const float2 f);
+	float length(const Float2 f);
 
-	float2 normal(const float2 f);
+	Float2 normal(const Float2 f);
 
-	float2 lineLineIntersection(float2 a, float2 b, float2 c, float2 d);
+	Float2 lineLineIntersection(Float2 a, Float2 b, Float2 c, Float2 d);
 }
 #endif

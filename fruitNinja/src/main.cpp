@@ -6,15 +6,15 @@ using namespace sf;
 #include <list>
 #include <algorithm>
 
-#include "fruit.h"
-#include "fx.h"
+#include "Fruit.h"
+#include "FX.h"
 
 #define PI 3.1415927f
 #define MIN(a, b) ((a)<(b)?(a):(b))
 #define RANDOM (float(rand())/RAND_MAX)
 
-inline float2 polarToCartesian(float angle, float rad) {
-	return rad*float2(cosf(angle), sinf(angle));
+inline Float2 polarToCartesian(float angle, float rad) {
+	return rad*Float2(cosf(angle), sinf(angle));
 }
 
 int main() {
@@ -27,16 +27,16 @@ int main() {
 	window.setFramerateLimit(165);
 	Clock deltaClock;
 	float totalDeltaTime=0;
-	float fruitTimer=0, sliceTimer=0;
+	float FruitTimer=0, sliceTimer=0;
 
 	//basic prog setup
-	float2 grav(0, 130);
-	aabb bounds(float2(0), float2(width, height));
-	std::list<fruit> fruits;
-	std::list<fx> effects;
+	Float2 grav(0, 130);
+	AABB bounds(Float2(0), Float2(width, height));
+	std::list<Fruit> Fruits;
+	std::list<FX> effects;
 
 	bool toSlice=false;
-	std::vector<float2> slice;
+	std::vector<Float2> slice;
 
 	RenderTexture renderTex;
 	if (!renderTex.create(width, height)) {
@@ -57,8 +57,8 @@ int main() {
 	Sprite shaderSprite(shaderTex);
 
 	//loop
-	auto drawLine=[&renderTex] (float2 a, float2 b, Color col=Color::White, float w=1) {
-		float2 ba=b-a;
+	auto drawLine=[&renderTex] (Float2 a, Float2 b, Color col=Color::White, float w=1) {
+		Float2 ba=b-a;
 		RectangleShape line(Vector2f(length(ba), 2*w));
 		line.setOrigin(Vector2f(0, w));
 		line.setRotation(atan2(ba.y, ba.x)*180/PI);
@@ -67,7 +67,7 @@ int main() {
 		line.setFillColor(col);
 		renderTex.draw(line);
 	};
-	auto drawCircle=[&renderTex] (float2 p, float r, Color col=Color::White) {
+	auto drawCircle=[&renderTex] (Float2 p, float r, Color col=Color::White) {
 		CircleShape circ(r);
 		circ.setOutlineThickness(-2);
 		circ.setOutlineColor(col);
@@ -77,7 +77,7 @@ int main() {
 		circ.setPosition(Vector2f(p.x, p.y));
 		renderTex.draw(circ);
 	};
-	auto fillCircle=[&renderTex] (float2 p, float r, Color col=Color::White) {
+	auto fillCircle=[&renderTex] (Float2 p, float r, Color col=Color::White) {
 		CircleShape circ(r);
 		circ.setFillColor(col);
 
@@ -88,7 +88,7 @@ int main() {
 	while (window.isOpen()) {
 		//mouse position
 		Vector2i mp=Mouse::getPosition(window);
-		float2 mousePos(mp.x, mp.y);
+		Float2 mousePos(mp.x, mp.y);
 
 		//polling
 		for (Event event; window.pollEvent(event);) {
@@ -100,7 +100,7 @@ int main() {
 		float deltaTime=MIN(actualDeltaTime, 1/60.f);
 		totalDeltaTime+=actualDeltaTime;
 		std::string fpsStr=std::to_string(int(1/actualDeltaTime))+"fps";
-		window.setTitle("Fruit Ninja @ "+fpsStr+" w/ "+std::to_string(fruits.size())+"fruits & "+std::to_string(effects.size())+"fx");
+		window.setTitle("Fruit Ninja @ "+fpsStr+" w/ "+std::to_string(Fruits.size())+"Fruits & "+std::to_string(effects.size())+"FX");
 
 		//start USER_INPUT
 		bool toSliceTemp=Mouse::isButtonPressed(Mouse::Left);
@@ -121,7 +121,7 @@ int main() {
 			}
 
 			//only check while slicing.
-			for (auto it=fruits.begin(); it!=fruits.end();) {
+			for (auto it=Fruits.begin(); it!=Fruits.end();) {
 				auto& f=*it;
 				if (f.sliced) {
 					it++;
@@ -131,19 +131,19 @@ int main() {
 				//find intersections
 				int len=f.pts.size();
 				bool found=false;
-				float2 ixPtA, ixPtB;
+				Float2 ixPtA, ixPtB;
 				int sIxA=-1, sIxB=-1, fIxA=-1, fIxB=-1;
 				for (int i=0; i<slice.size()-1; i++) {
-					float2 a=f.localize(slice[i]);
-					float2 b=f.localize(slice[i+1]);
-					//if "mid-slice" and point not in fruit
+					Float2 a=f.localize(slice[i]);
+					Float2 b=f.localize(slice[i+1]);
+					//if "mid-slice" and point not in Fruit
 					if (sIxA!=-1&&!f.checkLocalizedPt(a)) break;
 					for (int j=0; j<len; j++) {
-						float2 c=f.pts[j];
-						float2 d=f.pts[(j+1)%len];
-						float2 tu=lineLineIntersection(a, b, c, d);
+						Float2 c=f.pts[j];
+						Float2 d=f.pts[(j+1)%len];
+						Float2 tu=lineLineIntersection(a, b, c, d);
 						if (tu.x>=0&&tu.x<=1&&tu.y>=0&&tu.y<=1) {
-							float2 ixPt=a+tu.x*(b-a);
+							Float2 ixPt=a+tu.x*(b-a);
 							if (sIxA==-1) sIxA=i, fIxA=j, ixPtA=ixPt;
 							else if (sIxB==-1) {
 								sIxB=i, fIxB=j;
@@ -156,10 +156,10 @@ int main() {
 					if (found) break;
 				}
 				if (found&&sIxA!=sIxB&&fIxA!=fIxB) {//add chunks
-					fruit toAdd[2];
+					Fruit toAdd[2];
 
 					//construct shell
-					std::vector<float2> slicePart{ixPtA};
+					std::vector<Float2> slicePart{ixPtA};
 					for (int i=sIxA+1; i<=sIxB; i++) slicePart.push_back(f.localize(slice[i]));
 					slicePart.push_back(ixPtB);
 					toAdd[0].pts=slicePart;
@@ -181,11 +181,11 @@ int main() {
 						ch.rotVel=(i*2-1)*f.rotVel*(1+.5f*RANDOM);
 
 						//center around average
-						float2 avg=ch.getLocalizedAvg();
+						Float2 avg=ch.getLocalizedAvg();
 						for (auto& p:ch.pts) p-=avg;
 						ch.pos+=rotVec(avg, ch.rot);
 
-						fruits.push_front(ch);
+						Fruits.push_front(ch);
 					}
 
 					{//scoring
@@ -213,11 +213,11 @@ int main() {
 							float rot=2*PI*RANDOM;
 							float speed=15+25*RANDOM;
 							float lifespan=1+2*RANDOM;
-							effects.push_back(fx(f.pos+polarToCartesian(angle, rad), polarToCartesian(rot, speed), lifespan));
+							effects.push_back(FX(f.pos+polarToCartesian(angle, rad), polarToCartesian(rot, speed), lifespan));
 						}
 					}
 
-					it=fruits.erase(it);
+					it=Fruits.erase(it);
 				} else it++;
 			}
 
@@ -226,35 +226,35 @@ int main() {
 		}
 		sliceTimer+=deltaTime;
 
-		//every now and then throw a fruit from the bottom
-		if (fruitTimer>1) {
-			fruitTimer-=.6f+.6f*RANDOM;
+		//every now and then throw a Fruit from the bottom
+		if (FruitTimer>1) {
+			FruitTimer-=.6f+.6f*RANDOM;
 
 			float heading=PI*.25f*(5+2*RANDOM);
 			float speed=240+100*RANDOM;
 			float rot=2*PI*RANDOM;
 			float rotVel=PI*(1+RANDOM);
-			fruit fTemp(float2(width*(.3f+.4f*RANDOM), height), polarToCartesian(heading, speed), rot, rotVel);
+			Fruit fTemp(Float2(width*(.3f+.4f*RANDOM), height), polarToCartesian(heading, speed), rot, rotVel);
 			int num=5+7*RANDOM;
 			for (int i=0; i<num; i++) {
 				float angle=2*PI*i/num;
 				float rad=20+30*RANDOM;
-				fTemp.pts.push_back(float2(cosf(angle), sinf(angle))*rad);
+				fTemp.pts.push_back(Float2(cosf(angle), sinf(angle))*rad);
 			}
-			fruits.push_back(fTemp);
+			Fruits.push_back(fTemp);
 		}
-		fruitTimer+=deltaTime;
+		FruitTimer+=deltaTime;
 
-		//fruit dynamics(space pause debug)
-		if (!Keyboard::isKeyPressed(Keyboard::Space)) for (auto it=fruits.begin(); it!=fruits.end();) {
+		//Fruit dynamics(space pause debug)
+		if (!Keyboard::isKeyPressed(Keyboard::Space)) for (auto it=Fruits.begin(); it!=Fruits.end();) {
 			auto& f=*it;
 			f.rotVel*=1-.3f*deltaTime;
 			f.accelerate(grav);
 			f.update(deltaTime);
 
 			//remove if offscreen
-			aabb fBounds=f.getAABB();
-			if (fBounds.max.x<0||fBounds.min.x>width||fBounds.min.y>height) it=fruits.erase(it);
+			AABB fBounds=f.getAABB();
+			if (fBounds.max.x<0||fBounds.min.x>width||fBounds.min.y>height) it=Fruits.erase(it);
 			else it++;
 		}
 
@@ -284,14 +284,14 @@ int main() {
 			fillCircle(f.pos, 2, smoke);
 		}
 
-		//draw fruits
-		for (const auto& f:fruits) {
+		//draw Fruits
+		for (const auto& f:Fruits) {
 			Color colToUse=f.sliced?Color(20, 190, 50):Color(20, 20, 190);
 
 			int len=f.pts.size();
 			for (int i=0; i<len; i++) {
-				float2 a=f.globalize(f.pts[i]);
-				float2 b=f.globalize(f.pts[(i+1)%len]);
+				Float2 a=f.globalize(f.pts[i]);
+				Float2 b=f.globalize(f.pts[(i+1)%len]);
 				drawLine(a, b, colToUse);
 			}
 		}

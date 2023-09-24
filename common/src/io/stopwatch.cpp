@@ -1,42 +1,42 @@
-#include "stopwatch.h"
+#include "Stopwatch.h"
 
 namespace common {
-	stopwatch::stopwatch() : running(false) {}
+	Stopwatch::Stopwatch() : running(false) {}
 
-	nanoseconds stopwatch::getElapsedTime() {
+	nanoseconds Stopwatch::getElapsedTime() {
 		if (running) {
 			endTime=high_resolution_clock::now();
 		}
 		return duration_cast<nanoseconds>(endTime-startTime);
 	}
 
-	void stopwatch::start() {
+	void Stopwatch::start() {
 		if (!running) {
 			startTime=high_resolution_clock::now();
 			running=true;
 		}
 	}
 
-	void stopwatch::stop() {
+	void Stopwatch::stop() {
 		if (running) {
 			endTime=high_resolution_clock::now();
 			running=false;
 		}
 	}
 
-	float stopwatch::getSeconds() {
+	float Stopwatch::getSeconds() {
 		return duration_cast<seconds>(getElapsedTime()).count();
 	}
 
-	float stopwatch::getMillis() {
+	float Stopwatch::getMillis() {
 		return duration_cast<milliseconds>(getElapsedTime()).count();
 	}
 
-	float stopwatch::getMicros() {
+	float Stopwatch::getMicros() {
 		return duration_cast<microseconds>(getElapsedTime()).count();
 	}
 
-	float stopwatch::getNanos() {
+	float Stopwatch::getNanos() {
 		return duration_cast<nanoseconds>(getElapsedTime()).count();
 	}
 }

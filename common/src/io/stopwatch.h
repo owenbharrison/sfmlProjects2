@@ -1,20 +1,20 @@
 #pragma once
-#ifndef STOPWATCH_H
-#define STOPWATCH_H
+#ifndef Stopwatch_H
+#define Stopwatch_H
 
 #include <chrono>
 
 namespace common {
 	using namespace std::chrono;
 
-	class stopwatch {
+	class Stopwatch {
 		bool running;
 		high_resolution_clock::time_point startTime, endTime;
 
 		nanoseconds getElapsedTime();
 
 	public:
-		stopwatch();
+		Stopwatch();
 
 		void start();
 		void stop();

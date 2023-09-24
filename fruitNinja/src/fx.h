@@ -1,14 +1,14 @@
-#include "math/float2.h"
+#include "math/Float2.h"
 using namespace common;
 
 #pragma once
-struct fx {
-	float2 pos, vel, acc;
+struct FX {
+	Float2 pos, vel, acc;
 	float age, lifespan;
 
-	fx() : age(0), lifespan(0) {}
+	FX() : age(0), lifespan(0) {}
 
-	fx(float2 pos, float2 vel, float lifespan) : pos(pos), vel(vel), age(0), lifespan(lifespan) {}
+	FX(Float2 pos, Float2 vel, float lifespan) : pos(pos), vel(vel), age(0), lifespan(lifespan) {}
 
 	void update(float dt) {
 		vel+=acc*dt;
@@ -18,7 +18,7 @@ struct fx {
 		age+=dt;
 	}
 
-	void accelerate(float2 f) { acc+=f; }
+	void accelerate(Float2 f) { acc+=f; }
 
 	bool isDead() const {
 		return age>lifespan;

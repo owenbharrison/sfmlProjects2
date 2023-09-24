@@ -1,50 +1,52 @@
 #pragma once
-#ifndef MATRIX_H
-#define MATRIX_H
+#ifndef Matrix_H
+#define Matrix_H
 
-#include <iostream>
+#include <cassert>
 #include <vector>
 
 namespace common{
 	//rule of three go crazy
-	struct matrix {
+	struct Matrix {
 		size_t m, n;
 		float* v;
 
-		matrix(size_t m, size_t n);
+		Matrix();
+
+		Matrix(size_t m, size_t n);
 
 		//init with data
-		matrix(size_t m, size_t n, std::vector<float> init);
+		Matrix(size_t m, size_t n, std::vector<float> init);
 		
 		//copy constructor
-		matrix(const matrix& o);
+		Matrix(const Matrix& o);
 
-		~matrix();
+		~Matrix();
 
 		//assignment overload
-		matrix& operator=(const matrix& o);
+		Matrix& operator=(const Matrix& o);
 
 		//getter
 		inline float& operator()(size_t i, size_t j) const;
 
 		//negation
-		matrix operator-() const;
+		Matrix operator-() const;
 		
 		//addition/subtraction
-		matrix operator+(const matrix& o) const;
-		matrix operator-(const matrix& o) const;
+		Matrix operator+(const Matrix& o) const;
+		Matrix& operator+=(const Matrix& o);
+		Matrix operator-(const Matrix& o) const;
+		Matrix& operator-=(const Matrix& o);
 
-		//matrix multiplication
-		matrix operator*(const matrix& o) const;
+		//Matrix multiplication
+		Matrix operator*(const Matrix& o) const;
 
 		//scalar multiplication
-		matrix operator*(float f) const;
+		Matrix operator*(float f) const;
+		Matrix& operator*=(float f);
 
 		//swap cols and rows
-		matrix transpose() const;
+		Matrix transpose() const;
 	};
-
-	//printing
-	std::ostream& operator<<(std::ostream& o, const matrix& m);
 }
 #endif

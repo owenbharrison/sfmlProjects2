@@ -1,26 +1,23 @@
-#include "aabb.h"
+#include "AABB.h"
 
 namespace common {
 	float MIN(float a, float b) { return a<b?a:b; }
 	float MAX(float a, float b) { return a<b?b:a; }
-	float2 MIN(float2 a, float2 b) {
-		return float2(MIN(a.x, b.x), MIN(a.y, b.y));
+
+	AABB::AABB() {}
+
+	AABB::AABB(Float2 a, Float2 b) {
+		min={MIN(a.x, b.x), MIN(a.y, b.y)};
+		max={MAX(a.x, b.x), MAX(a.y, b.y)};
 	}
-	float2 MAX(float2 a, float2 b) {
-		return float2(MAX(a.x, b.x), MAX(a.y, b.y));
-	}
 
-	aabb::aabb() {}
-
-	aabb::aabb(float2 a, float2 b) : min(MIN(a, b)), max(MAX(a, b)) {}
-
-	bool aabb::containsPt(const float2 p) const {
+	bool AABB::containsPt(const Float2 p) const {
 		bool xOverlap=p.x>=min.x&&p.x<=max.x;
 		bool yOverlap=p.y>=min.y&&p.y<=max.y;
 		return xOverlap&&yOverlap;
 	}
 
-	bool aabb::overlaps(aabb o) const {
+	bool AABB::overlaps(AABB o) const {
 		bool xOverlap=min.x<=o.max.x&&max.x>=o.min.x;
 		bool yOverlap=min.y<=o.max.y&&max.y>=o.min.y;
 		return xOverlap&&yOverlap;
@@ -28,8 +25,8 @@ namespace common {
 
 	//liang barsky clipping
 	//https://dos.gamebub.com/cpp_algorithms.php#lineclip
-	bool aabb::clipLine(float2& a, float2& b) const {
-		float2 ba=b-a;
+	bool AABB::clipLine(Float2& a, Float2& b) const {
+		Float2 ba=b-a;
 		float p, q, r, t0=0, t1=1;
 		//traverse thru top, bottom, left, right
 		for (int e=0; e<4; e++) {

@@ -24,6 +24,9 @@
     <ClInclude Include="src\spring.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\physicsSolver.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\main.cpp">
@@ -31,29 +34,29 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="demo\wip.fzx" />
-    <None Include="demo\arm.fzx" />
-    <None Include="demo\benchmark.fzx" />
-    <None Include="demo\benchmark2.fzx" />
-    <None Include="demo\cloth.fzx" />
-    <None Include="demo\contraption.fzx" />
-    <None Include="demo\contraption2.fzx" />
-    <None Include="demo\contraption3.fzx" />
-    <None Include="demo\demo.fzx" />
-    <None Include="demo\latch.fzx" />
-    <None Include="demo\opener.fzx" />
-    <None Include="demo\puzzle.fzx" />
-    <None Include="demo\reactive.fzx" />
-    <None Include="demo\reactive2.fzx" />
-    <None Include="demo\sliders.fzx" />
-    <None Include="demo\softbodies.fzx" />
-    <None Include="demo\softbody.fzx" />
-    <None Include="demo\softbody2.fzx" />
-    <None Include="demo\squisher.fzx" />
-    <None Include="demo\squisher2.fzx" />
-    <None Include="demo\swing.fzx" />
-    <None Include="demo\terrain.fzx" />
-    <None Include="demo\walker.fzx" />
+    <None Include="res\wip.fzx" />
+    <None Include="res\arm.fzx" />
+    <None Include="res\benchmark.fzx" />
+    <None Include="res\benchmark2.fzx" />
+    <None Include="res\cloth.fzx" />
+    <None Include="res\contraption.fzx" />
+    <None Include="res\contraption2.fzx" />
+    <None Include="res\contraption3.fzx" />
+    <None Include="res\demo.fzx" />
+    <None Include="res\latch.fzx" />
+    <None Include="res\opener.fzx" />
+    <None Include="res\puzzle.fzx" />
+    <None Include="res\reactive.fzx" />
+    <None Include="res\reactive2.fzx" />
+    <None Include="res\sliders.fzx" />
+    <None Include="res\softbodies.fzx" />
+    <None Include="res\softbody.fzx" />
+    <None Include="res\softbody2.fzx" />
+    <None Include="res\squisher.fzx" />
+    <None Include="res\squisher2.fzx" />
+    <None Include="res\swing.fzx" />
+    <None Include="res\terrain.fzx" />
+    <None Include="res\walker.fzx" />
     <None Include="shader\crt.glsl" />
     <None Include="shader\blueprint.glsl" />
   </ItemGroup>

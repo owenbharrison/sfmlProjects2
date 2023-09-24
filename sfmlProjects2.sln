@@ -3,13 +3,15 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.7.34024.191
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "physicsDrawer", "physicsDrawer\physicsDrawer.vcxproj", "{11678361-A514-422F-B19E-803FF24ED243}"
-EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "fruitNinja", "fruitNinja\fruitNinja.vcxproj", "{BC5FB8A7-141C-457A-A5D0-DFC34925649A}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "verletIntegration", "verletIntegration\verletIntegration.vcxproj", "{50984147-A64B-4CBF-A1E3-AEFA1426E9E2}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "common", "common\common.vcxproj", "{AECD3FDF-98A3-413F-BE07-D414243F24B8}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "3Dtest", "3Dtest\3Dtest.vcxproj", "{1F46FA5E-D436-46D7-A72E-BA7FB5A6161B}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "neuralNetwork", "neuralNetwork\neuralNetwork.vcxproj", "{DE0C89A8-3411-4F06-B895-764EA03E44CC}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -19,14 +21,6 @@ Global
 		Release|x86 = Release|x86
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{11678361-A514-422F-B19E-803FF24ED243}.Debug|x64.ActiveCfg = Debug|x64
-		{11678361-A514-422F-B19E-803FF24ED243}.Debug|x64.Build.0 = Debug|x64
-		{11678361-A514-422F-B19E-803FF24ED243}.Debug|x86.ActiveCfg = Debug|Win32
-		{11678361-A514-422F-B19E-803FF24ED243}.Debug|x86.Build.0 = Debug|Win32
-		{11678361-A514-422F-B19E-803FF24ED243}.Release|x64.ActiveCfg = Release|x64
-		{11678361-A514-422F-B19E-803FF24ED243}.Release|x64.Build.0 = Release|x64
-		{11678361-A514-422F-B19E-803FF24ED243}.Release|x86.ActiveCfg = Release|Win32
-		{11678361-A514-422F-B19E-803FF24ED243}.Release|x86.Build.0 = Release|Win32
 		{BC5FB8A7-141C-457A-A5D0-DFC34925649A}.Debug|x64.ActiveCfg = Debug|x64
 		{BC5FB8A7-141C-457A-A5D0-DFC34925649A}.Debug|x64.Build.0 = Debug|x64
 		{BC5FB8A7-141C-457A-A5D0-DFC34925649A}.Debug|x86.ActiveCfg = Debug|Win32
@@ -51,6 +45,22 @@ Global
 		{AECD3FDF-98A3-413F-BE07-D414243F24B8}.Release|x64.Build.0 = Release|x64
 		{AECD3FDF-98A3-413F-BE07-D414243F24B8}.Release|x86.ActiveCfg = Release|Win32
 		{AECD3FDF-98A3-413F-BE07-D414243F24B8}.Release|x86.Build.0 = Release|Win32
+		{1F46FA5E-D436-46D7-A72E-BA7FB5A6161B}.Debug|x64.ActiveCfg = Debug|x64
+		{1F46FA5E-D436-46D7-A72E-BA7FB5A6161B}.Debug|x64.Build.0 = Debug|x64
+		{1F46FA5E-D436-46D7-A72E-BA7FB5A6161B}.Debug|x86.ActiveCfg = Debug|Win32
+		{1F46FA5E-D436-46D7-A72E-BA7FB5A6161B}.Debug|x86.Build.0 = Debug|Win32
+		{1F46FA5E-D436-46D7-A72E-BA7FB5A6161B}.Release|x64.ActiveCfg = Release|x64
+		{1F46FA5E-D436-46D7-A72E-BA7FB5A6161B}.Release|x64.Build.0 = Release|x64
+		{1F46FA5E-D436-46D7-A72E-BA7FB5A6161B}.Release|x86.ActiveCfg = Release|Win32
+		{1F46FA5E-D436-46D7-A72E-BA7FB5A6161B}.Release|x86.Build.0 = Release|Win32
+		{DE0C89A8-3411-4F06-B895-764EA03E44CC}.Debug|x64.ActiveCfg = Debug|x64
+		{DE0C89A8-3411-4F06-B895-764EA03E44CC}.Debug|x64.Build.0 = Debug|x64
+		{DE0C89A8-3411-4F06-B895-764EA03E44CC}.Debug|x86.ActiveCfg = Debug|Win32
+		{DE0C89A8-3411-4F06-B895-764EA03E44CC}.Debug|x86.Build.0 = Debug|Win32
+		{DE0C89A8-3411-4F06-B895-764EA03E44CC}.Release|x64.ActiveCfg = Release|x64
+		{DE0C89A8-3411-4F06-B895-764EA03E44CC}.Release|x64.Build.0 = Release|x64
+		{DE0C89A8-3411-4F06-B895-764EA03E44CC}.Release|x86.ActiveCfg = Release|Win32
+		{DE0C89A8-3411-4F06-B895-764EA03E44CC}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
