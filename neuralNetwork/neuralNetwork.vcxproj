@@ -169,11 +169,11 @@
   <ItemGroup>
     <None Include="res\test.csv" />
     <None Include="res\train.csv" />
+    <None Include="shader\square.glsl" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\neuralNet.h" />
-    <ClInclude Include="src\sfmlEngine.h" />
-    <ClInclude Include="src\nnDemo.h" />
+    <ClInclude Include="src\neuralNetDemo.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

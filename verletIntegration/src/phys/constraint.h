@@ -1,14 +1,19 @@
+#pragma once
+#ifndef CONSTRAINT_H
+#define CONSTRAINT_H
+
 #include "particle.h"
 
-#pragma once
 struct Constraint {
+	static const float defRad;
+
 	Particle* a=nullptr, * b=nullptr;
 	float rad=0, restLen=0;
 	bool ghosted=false;
 
 	Constraint() {}
 
-	Constraint(Particle& a_, Particle& b_, float rad) : a(&a_), b(&b_), rad(rad) {
+	Constraint(Particle& a_, Particle& b_, float rad=defRad) : a(&a_), b(&b_), rad(rad) {
 		restLen=length(a->pos-b->pos);
 	}
 
@@ -27,3 +32,5 @@ struct Constraint {
 		if (!b->locked) b->pos-=a->mass/totalMass*2*f;
 	}
 };
+const float Constraint::defRad=4.87f;
+#endif

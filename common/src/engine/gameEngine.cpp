@@ -3,9 +3,12 @@
 namespace common {
 	GameEngine::GameEngine() : width(0), height(0) {}
 
-	GameEngine::GameEngine(size_t w, size_t h, std::string t) : width(w), height(h), m_title(t), RenderWindow(sf::VideoMode(w, h), "", sf::Style::Titlebar|sf::Style::Close) {}
+	GameEngine::GameEngine(size_t w, size_t h, std::string t) : width(w), height(h), m_title(t), RenderWindow(sf::VideoMode(w, h), "", sf::Style::Titlebar|sf::Style::Close) {
+		setTitle(m_title);
+		setKeyRepeatEnabled(false);
+	}
 
-	void GameEngine::drawLine(Float2 a, Float2 b, sf::Color col=sf::Color::White) {
+	void GameEngine::drawLine(Float2 a, Float2 b, sf::Color col) {
 		sf::Vertex line[]{
 			sf::Vertex(sf::Vector2f(a.x, a.y), col),
 			sf::Vertex(sf::Vector2f(b.x, b.y), col)
@@ -13,7 +16,7 @@ namespace common {
 		draw(line, 2, sf::Lines);
 	}
 
-	void GameEngine::drawThickLine(Float2 a, Float2 b, float w, sf::Color col=sf::Color::White) {
+	void GameEngine::drawThickLine(Float2 a, Float2 b, float w, sf::Color col) {
 		Float2 ba=b-a;
 		sf::RectangleShape line(sf::Vector2f(length(ba), 2*w));
 		line.setOrigin(sf::Vector2f(0, w));
@@ -25,7 +28,7 @@ namespace common {
 		draw(line);
 	}
 
-	void GameEngine::drawCircle(Float2 p, float r, sf::Color col=sf::Color::White) {
+	void GameEngine::drawCircle(Float2 p, float r, sf::Color col) {
 		sf::CircleShape circ(r);
 		circ.setOrigin(sf::Vector2f(r, r));
 		circ.setPosition(sf::Vector2f(p.x, p.y));
@@ -36,7 +39,7 @@ namespace common {
 		draw(circ);
 	}
 
-	void GameEngine::fillCircle(Float2 p, float r, sf::Color col=sf::Color::White) {
+	void GameEngine::fillCircle(Float2 p, float r, sf::Color col) {
 		sf::CircleShape circ(r);
 		circ.setOrigin(sf::Vector2f(r, r));
 		circ.setPosition(sf::Vector2(p.x, p.y));
@@ -46,16 +49,25 @@ namespace common {
 	}
 
 	void GameEngine::run() {
-		init();
+		if (!init()) {
+			close();
+			return;
+		}
 
 		while (isOpen()) {
 			sf::Vector2i mp=sf::Mouse::getPosition(*this);
-			mousePos={mp.x, mp.y};
+			mousePos.x=mp.x, mousePos.y=mp.y;
+
+			input();
 
 			//polling
 			for (sf::Event e; pollEvent(e);) {
 				switch (e.type) {
-					case sf::Event::Closed: close(); break;
+					case sf::Event::Closed:
+					{
+						close();
+						return;
+					}
 					case sf::Event::MouseButtonPressed:
 					{
 						onMouseDown(e.mouseButton.button);
@@ -78,7 +90,7 @@ namespace common {
 					}
 					case sf::Event::KeyReleased:
 					{
-						onKeyDown(e.key.code);
+						onKeyUp(e.key.code);
 						break;
 					}
 				}
@@ -92,7 +104,6 @@ namespace common {
 			update(deltaTime);
 
 			//render
-			clear();
 			render();
 			display();
 		}

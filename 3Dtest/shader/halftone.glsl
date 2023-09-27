@@ -1,7 +1,7 @@
 #version 330
 
-uniform vec2 resolution;
-uniform sampler2D mainTex;
+uniform vec2 Resolution;
+uniform sampler2D Maintex;
 
 #define PI 3.1415926
 
@@ -24,8 +24,8 @@ vec2 rotVec(vec2 v, float f) {
 
 void main() {
 	//get cam col
-	vec2 uv=gl_FragCoord.xy/resolution;
-	vec4 col=texture(mainTex, uv);
+	vec2 uv=gl_FragCoord.xy/Resolution;
+	vec4 col=texture(MainTex, uv);
 	vec3 thresh=clamp(col.rgb*.5, .05, .45);
 	
 	//halftone stuff

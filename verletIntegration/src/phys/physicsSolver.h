@@ -8,7 +8,7 @@
 #include "constraint.h"
 #include "spring.h"
 
-class physicsSolver {
+class PhysicsSolver {
 	std::list<Particle>* particles=nullptr;
 	std::list<Constraint>* constraints=nullptr;
 	std::list<Spring>* springs=nullptr;
@@ -28,11 +28,11 @@ class physicsSolver {
 	bool useSpacialHash=false;
 
 public:
-	physicsSolver() {}
+	PhysicsSolver() {}
 
-	physicsSolver(std::list<Particle>* p, std::list<Constraint>* c, std::list<Spring>* s) : particles(p), constraints(c), springs(s) {}
+	PhysicsSolver(std::list<Particle>* p, std::list<Constraint>* c, std::list<Spring>* s) : particles(p), constraints(c), springs(s) {}
 
-	~physicsSolver() {
+	~PhysicsSolver() {
 		delete[] spacialHash;
 	}
 
@@ -51,7 +51,7 @@ public:
 		useBoundary=true;
 	}
 
-	bool initSpacialHash(float sz) {
+	[[nodiscard]] bool initSpacialHash(float sz) {
 		if (!useBoundary) return false;
 		if (sz<=0) return false;
 
@@ -63,15 +63,11 @@ public:
 		return true;
 	}
 
-	inline bool pValid() const { return particles!=nullptr; }
-	inline bool cValid() const { return constraints!=nullptr; }
-	inline bool sValid() const { return springs!=nullptr; }
-
 	void update(float dt) {
 		//connectors
-		if (cValid()) for (auto& c:*constraints) c.update();
+		if (constraints) for (auto& c:*constraints) c.update();
 
-		if (sValid()) for (auto& s:*springs) s.update(dt);
+		if (springs) for (auto& s:*springs) s.update(dt);
 
 		//collisions
 		ParticleParticleCollisions();
@@ -79,7 +75,7 @@ public:
 		ParticleConstraintCollisions();
 
 		//dynamics
-		if (pValid()) for (auto& p:*particles) {
+		if (particles) for (auto& p:*particles) {
 			//f=mg
 			if (useGravity) p.applyForce(p.mass*gravity);
 
@@ -109,7 +105,7 @@ public:
 	}
 
 	void ParticleParticleCollisions() {
-		if (!pValid()) return;
+		if (!particles) return;
 
 		if (useSpacialHash) {
 			//clear buckets
@@ -175,7 +171,7 @@ public:
 	}
 
 	void ParticleConstraintCollisions() {
-		if (!pValid()||!cValid()) return;
+		if (!particles||!constraints) return;
 
 		//for every Particle
 		for (auto& p:*particles) {

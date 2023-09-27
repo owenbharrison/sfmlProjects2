@@ -4,7 +4,7 @@
 
 #include <SFML/Graphics.hpp>
 
-#include "math/float2.h"
+#include "../math/float2.h"
 
 namespace common {
 	struct GameEngine : sf::RenderWindow {
@@ -17,7 +17,7 @@ namespace common {
 
 		void run();
 
-	private:
+	protected:
 		std::string m_title;
 		sf::Clock m_deltaClock;
 
@@ -35,10 +35,15 @@ namespace common {
 		void fillCircle(Float2 p, float r, sf::Color col=sf::Color::White);
 
 		//on prog start
-		virtual void init() {}
+		virtual bool init()=0;
+
 		//run as fast as possible
+		virtual void input() {}
 		virtual void update(float dt)=0;
 		virtual void render()=0;
+
+	private:
+		sf::RenderTexture m_renderTex;
 	};
 }
 #endif

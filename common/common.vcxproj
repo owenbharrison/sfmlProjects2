@@ -143,13 +143,13 @@
     </Lib>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="src\gameEngine.h" />
+    <ClInclude Include="src\engine\gameEngine.h" />
     <ClInclude Include="src\geom\aabb.h" />
     <ClInclude Include="src\io\stopwatch.h" />
     <ClInclude Include="src\math\float2.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\gameEngine.cpp" />
+    <ClCompile Include="src\engine\gameEngine.cpp" />
     <ClCompile Include="src\geom\aabb.cpp" />
     <ClCompile Include="src\io\stopwatch.cpp" />
     <ClCompile Include="src\math\matrix.cpp" />

@@ -74,6 +74,9 @@
       <AdditionalLibraryDirectories>C:\SFML\build\lib\Debug</AdditionalLibraryDirectories>
       <AdditionalDependencies>sfml-system-d.lib;sfml-window-d.lib;sfml-graphics-d.lib</AdditionalDependencies>
     </Link>
+    <PreBuildEvent>
+      <Command>del $(TargetPath)</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -95,6 +98,9 @@
       <AdditionalDependencies>sfml-system.lib;sfml-window.lib;sfml-graphics.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>C:\SFML\build\lib\Release;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
+    <PreBuildEvent>
+      <Command>del $(TargetPath)</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -112,6 +118,9 @@
       <AdditionalLibraryDirectories>C:\SFML\build\lib\Debug</AdditionalLibraryDirectories>
       <AdditionalDependencies>sfml-system-d.lib;sfml-window-d.lib;sfml-graphics-d.lib</AdditionalDependencies>
     </Link>
+    <PreBuildEvent>
+      <Command>del $(TargetPath)</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -133,15 +142,16 @@
       <AdditionalDependencies>sfml-system.lib;sfml-window.lib;sfml-graphics.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>C:\SFML\build\lib\Release;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
+    <PreBuildEvent>
+      <Command>del $(TargetPath)</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="src\constraint.h" />
-    <ClInclude Include="src\particle.h" />
-    <ClInclude Include="src\physicsSolver.h" />
-    <ClInclude Include="src\spring.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="src\main.cpp" />
+    <ClInclude Include="src\phys\constraint.h" />
+    <ClInclude Include="src\phys\particle.h" />
+    <ClInclude Include="src\phys\physicsSolver.h" />
+    <ClInclude Include="src\phys\spring.h" />
+    <ClInclude Include="src\verletIntegrationDemo.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="res\arm.fzx" />
@@ -168,12 +178,16 @@
     <None Include="res\walker.fzx" />
     <None Include="res\wip.fzx" />
     <None Include="shader\blueprint.glsl" />
+    <None Include="shader\blueprint2.glsl" />
     <None Include="shader\crt.glsl" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\common\common.vcxproj">
       <Project>{aecd3fdf-98a3-413f-be07-d414243f24b8}</Project>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="src\main.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

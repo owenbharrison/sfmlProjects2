@@ -15,23 +15,21 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="src\constraint.h">
+    <ClInclude Include="src\phys\constraint.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\particle.h">
+    <ClInclude Include="src\phys\particle.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\spring.h">
+    <ClInclude Include="src\phys\spring.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\physicsSolver.h">
+    <ClInclude Include="src\phys\physicsSolver.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="src\main.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
+    <ClInclude Include="src\verletIntegrationDemo.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="res\wip.fzx" />
@@ -59,5 +57,11 @@
     <None Include="res\walker.fzx" />
     <None Include="shader\crt.glsl" />
     <None Include="shader\blueprint.glsl" />
+    <None Include="shader\blueprint2.glsl" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="src\main.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

@@ -22,15 +22,13 @@
   <ItemGroup>
     <None Include="res\test.csv" />
     <None Include="res\train.csv" />
+    <None Include="shader\square.glsl" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="src\sfmlEngine.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\nnDemo.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="src\neuralNet.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\neuralNetDemo.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

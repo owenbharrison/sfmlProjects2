@@ -1,13 +1,18 @@
+#pragma once
+#ifndef SPRING_H
+#define SPRING_H
+
 #include "particle.h"
 
-#pragma once
 struct Spring {
+	static const float defStiffness, defDamp;
+
 	Particle* a=nullptr, * b=nullptr;
 	float restLen=0, stiffness=0, damping=0;
 
 	Spring() {}
 
-	Spring(Particle& a_, Particle& b_, float stiffness, float damping) : a(&a_), b(&b_), stiffness(stiffness), damping(damping) {
+	Spring(Particle& a_, Particle& b_, float k=defStiffness, float d=defDamp) : a(&a_), b(&b_), stiffness(k), damping(d) {
 		restLen=length(a->pos-b->pos);
 	}
 
@@ -28,3 +33,6 @@ struct Spring {
 		if(!b->locked) b->applyForce(-force);
 	}
 };
+const float Spring::defStiffness=560.3f*(PI*Particle::defRad*Particle::defRad);
+const float Spring::defDamp=4.3f*(PI*Particle::defRad*Particle::defRad);
+#endif

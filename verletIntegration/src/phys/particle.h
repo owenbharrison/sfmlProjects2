@@ -1,10 +1,15 @@
+#pragma once
+#ifndef PARTICLE_H
+#define PARTICLE_H
+
 #include "geom/AABB.h"
 using namespace common;
 
 #define PI 3.1415927f
 
-#pragma once
 struct Particle {
+	static const float defRad;
+
 	Float2 pos, oldpos, force, oldforce;
 	float rad=0, mass=0;
 	int id=-1;
@@ -13,7 +18,7 @@ struct Particle {
 
 	Particle() {}
 
-	Particle(Float2 pos, float rad) : pos(pos), oldpos(pos), rad(rad) {
+	Particle(Float2 pos, float rad=defRad) : pos(pos), oldpos(pos), rad(rad) {
 		mass=PI*rad*rad;
 	}
 
@@ -40,3 +45,5 @@ struct Particle {
 		if (pos.y>a.max.y-rad) pos.y=a.max.y-rad, oldpos.y=pos.y+vel.y;
 	}
 };
+const float Particle::defRad=9.73f;
+#endif
