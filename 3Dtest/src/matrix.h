@@ -4,7 +4,7 @@
 
 template <size_t M, size_t N>
 struct Matrix {
-	static_assert(M>0&&N>0, "Matrix dimension must be nonzero.");
+	static_assert(M>0&&N>0);
 	float v[M][N]{0.f};
 
 	void operator=(const Matrix& in) {

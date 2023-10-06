@@ -132,21 +132,21 @@ int main() {
 				int len=f.pts.size();
 				bool found=false;
 				Float2 ixPtA, ixPtB;
-				int sIxA=-1, sIxB=-1, fIxA=-1, fIxB=-1;
+				int sixA=-1, sixB=-1, fixA=-1, fixB=-1;
 				for (int i=0; i<slice.size()-1; i++) {
 					Float2 a=f.localize(slice[i]);
 					Float2 b=f.localize(slice[i+1]);
 					//if "mid-slice" and point not in Fruit
-					if (sIxA!=-1&&!f.checkLocalizedPt(a)) break;
+					if (sixA!=-1&&!f.checkLocalizedPt(a)) break;
 					for (int j=0; j<len; j++) {
 						Float2 c=f.pts[j];
 						Float2 d=f.pts[(j+1)%len];
 						Float2 tu=lineLineIntersection(a, b, c, d);
 						if (tu.x>=0&&tu.x<=1&&tu.y>=0&&tu.y<=1) {
 							Float2 ixPt=a+tu.x*(b-a);
-							if (sIxA==-1) sIxA=i, fIxA=j, ixPtA=ixPt;
-							else if (sIxB==-1) {
-								sIxB=i, fIxB=j;
+							if (sixA==-1) sixA=i, fixA=j, ixPtA=ixPt;
+							else if (sixB==-1) {
+								sixB=i, fixB=j;
 								ixPtB=ixPt;
 								found=true;
 								break;
@@ -155,16 +155,16 @@ int main() {
 					}
 					if (found) break;
 				}
-				if (found&&sIxA!=sIxB&&fIxA!=fIxB) {//add chunks
+				if (found&&sixA!=sixB&&fixA!=fixB) {//add chunks
 					Fruit toAdd[2];
 
 					//construct shell
 					std::vector<Float2> slicePart{ixPtA};
-					for (int i=sIxA+1; i<=sIxB; i++) slicePart.push_back(f.localize(slice[i]));
+					for (int i=sixA+1; i<=sixB; i++) slicePart.push_back(f.localize(slice[i]));
 					slicePart.push_back(ixPtB);
 					toAdd[0].pts=slicePart;
-					for (int i=fIxB; i!=fIxA; i=i==0?len-1:i-1) toAdd[0].pts.push_back(f.pts[i]);
-					for (int i=fIxA; i!=fIxB; i=i==0?len-1:i-1) toAdd[1].pts.push_back(f.pts[i]);
+					for (int i=fixB; i!=fixA; i=i==0?len-1:i-1) toAdd[0].pts.push_back(f.pts[i]);
+					for (int i=fixA; i!=fixB; i=i==0?len-1:i-1) toAdd[1].pts.push_back(f.pts[i]);
 					std::reverse(toAdd[1].pts.begin(), toAdd[1].pts.end());
 					toAdd[1].pts.insert(toAdd[1].pts.begin(), slicePart.begin(), slicePart.end());
 

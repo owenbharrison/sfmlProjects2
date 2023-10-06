@@ -1,11 +1,14 @@
 #pragma once
-#ifndef Matrix_H
-#define Matrix_H
+#ifndef MATRix_H
+#define MATRix_H
 
 #include <cassert>
 #include <vector>
+#include <functional>
 
 namespace common{
+	typedef std::function<float(float)> UnaryFloatFunc;
+
 	//rule of three go crazy
 	struct Matrix {
 		size_t m, n;
@@ -28,6 +31,9 @@ namespace common{
 
 		//getter
 		inline float& operator()(size_t i, size_t j) const;
+
+		//setter
+		Matrix forEach(UnaryFloatFunc func);
 
 		//negation
 		Matrix operator-() const;

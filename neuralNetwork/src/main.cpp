@@ -1,7 +1,7 @@
 #include "neuralNetDemo.h"
 
 int main() {
-	NeuralNetDemo demo(640, 480, "NN Testing");
+	NeuralNetDemo demo(240, 180, "Neural Net");
 	demo.setFramerateLimit(120);
 	demo.run();
 

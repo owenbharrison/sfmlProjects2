@@ -1,7 +1,5 @@
 #include "Float2.h"
 
-#include <cmath>
-
 namespace common {
 	Float2::Float2() : Float2(0) {}
 

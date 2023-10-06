@@ -53,7 +53,7 @@ struct mesh {
 		if (!file.is_open()) return false;
 
 		std::vector<vec3d> vtxs;
-		std::vector<triIndex> tIxs;
+		std::vector<triIndex> tixs;
 
 		//get extreme points
 		float nx=INFINITY, ny=INFINITY, nz=INFINITY;
@@ -87,7 +87,7 @@ struct mesh {
 				}
 				//simple triangulation of face
 				for (int i=1; i<indexes.size()-1; i++) {
-					tIxs.push_back({indexes[0], indexes[i], indexes[i+1]});
+					tixs.push_back({indexes[0], indexes[i], indexes[i+1]});
 				}
 			}
 		}
@@ -102,7 +102,7 @@ struct mesh {
 		for (auto& v:vtxs) v/=maxDim;
 
 		//use real tri ix info
-		for (auto& tIx:tIxs) tris.push_back({vtxs[tIx.a], vtxs[tIx.b], vtxs[tIx.c]});
+		for (auto& tix:tixs) tris.push_back({vtxs[tix.a], vtxs[tix.b], vtxs[tix.c]});
 
 		return true;
 	}

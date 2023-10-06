@@ -2,6 +2,8 @@
 #ifndef Float2_H
 #define Float2_H
 
+#include <cmath>
+
 namespace common {
 	struct Float2 {
 		float x, y;

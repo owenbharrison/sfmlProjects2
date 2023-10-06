@@ -10,7 +10,7 @@ using namespace sf;
 #include "io/stopwatch.h"
 #include "geom/aabb.h"
 
-float clamp(float x, float a, float b) {
+inline float clamp(float x, float a, float b) {
 	if (x<a) return a;
 	if (x>b) return b;
 	return x;
@@ -33,7 +33,6 @@ struct NeuralNetDemo : GameEngine {
 	AABB gridBox;
 
 	NeuralNet neuralNet;
-	Matrix trainingData;
 
 	bool init() override {
 		grid=new float[gridLen] {0};
@@ -48,7 +47,8 @@ struct NeuralNetDemo : GameEngine {
 			gridBox=AABB(ctr-dim, ctr+dim);
 		}
 
-		neuralNet=NeuralNet({gridLen, 16, 10});
+		neuralNet=NeuralNet({gridLen, 48, 16, 10});
+		neuralNet.hiddenActivation=tanhf;
 		const size_t M=2500;
 		Matrix X(neuralNet.inputSz, M);
 		Matrix Y(neuralNet.outputSz, M);
@@ -78,18 +78,16 @@ struct NeuralNetDemo : GameEngine {
 			std::cout<<"successfully loaded data\n";
 		} else return false;
 
-		trainingData=X;
-
 		std::cout<<"training started...\n";
 		Stopwatch trainWatch; trainWatch.start();
-		if (!neuralNet.train(X, Y, 750, .25f, [this, &Y] (NeuralNet& n, Matrix& m) {
+		if (!neuralNet.train(X, Y, 1500, .31f, [&Y] (NeuralNet& n, Matrix& m) {
 			float cost=0;
 			Matrix sub=m-Y;
 			for (size_t i=0; i<sub.m*sub.n; i++) {
 				cost+=sub.v[i]*sub.v[i];
 			}
-			std::cout<<"cost: "<<cost<<'\n';
 
+			//printing
 			size_t num=0;
 			for (size_t j=0; j<m.n; j++) {
 				size_t r=0;
@@ -101,15 +99,10 @@ struct NeuralNetDemo : GameEngine {
 				if (Y(r, j)) num++;
 			}
 			float pct=float(num)/m.n;
-
-			clear();
-			RectangleShape rect(Vector2f(pct*width, 40));
-			rect.setFillColor(Color(255*(1-pct), 255*pct, 35));
-			draw(rect);
-			display();
+			std::cout<<"acc: "<<int(100*pct)<<"% cost: "<<cost<<'\n';
 
 			//quit early
-			return pct>.97f;
+			return pct>.97f&&cost<25;
 		})) return false;
 		trainWatch.stop();
 		std::cout<<"training finished in: "<<trainWatch.getMillis()<<"ms\n";
@@ -119,39 +112,34 @@ struct NeuralNetDemo : GameEngine {
 
 	void onKeyDown(Keyboard::Key key) override {
 		switch (key) {
-			case Keyboard::C:
-			{//clear grid
+			//clear grid	
+			case Keyboard::C: {
 				memset(grid, 0, gridLen*sizeof(float));
 				break;
 			}
-			case Keyboard::Space:
-			{
+			//neural net prediction
+			case Keyboard::Space: {
 				Matrix input(gridLen, 1);
-				for (size_t i=0; i<gridLen; i++) {
-					input(i, 0)=grid[i];
-				}
+				memcpy(input.v, grid, gridLen*sizeof(float));
 				Matrix output=neuralNet.predict(input);
-				
+
+				std::cout<<"pred: \n";
 				float record=0;
 				size_t argmax=0;
 				for (size_t i=0; i<output.m; i++) {
 					float& v=output(i, 0);
+					std::cout<<i<<": "<<int(100*v)<<"%\n";
 					if (v>record) record=v, argmax=i;
 				}
-				std::cout<<"prediction: "<<argmax<<'\n';
-				break;
-			}
-			case Keyboard::R: {
-				size_t ri=rand01()*trainingData.n;
-				for (size_t i=0; i<gridLen; i++) {
-					grid[i]=trainingData(i, ri);
-				}
+				std::cout<<"final: "<<argmax<<'\n';
+
 				break;
 			}
 		}
 	}
 
 	void update(float dt) override {
+		//drawing
 		if (Mouse::isButtonPressed(Mouse::Left)) {
 			Float2 p=gridSz*(mousePos-gridBox.min)/(gridBox.max-gridBox.min);
 			int si=p.x, sj=p.y;
@@ -160,7 +148,8 @@ struct NeuralNetDemo : GameEngine {
 					int i=si+di, j=sj+dj;
 					if (i<0||j<0||i>=gridSz||j>=gridSz) continue;
 
-					grid[i+j*gridSz]+=65*dt*expf(-(di*di+dj*dj));
+					//some exponential falloff
+					grid[i+j*gridSz]+=50*dt*expf(-(di*di+dj*dj));
 				}
 			}
 		}
@@ -173,15 +162,6 @@ struct NeuralNetDemo : GameEngine {
 		}
 		gridTex.update(pixels);
 		gridShader.setUniform("MainTex", gridTex);
-	}
-
-	void showNeuralNet(const NeuralNet& n, AABB bounds, size_t maxRows=20) {
-		size_t num=0;
-		for (size_t i=0; i<n.numLayers; i++) {
-			if (i==0) num+=MIN(n.weights[i].n, maxRows);
-			num+=MIN(n.weights[i].m, maxRows);
-		}
-		std::cout<<num<<'\n';
 	}
 
 	void render() override {

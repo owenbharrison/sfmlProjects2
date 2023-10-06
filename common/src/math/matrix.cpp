@@ -1,4 +1,4 @@
-#include "Matrix.h"
+#include "matrix.h"
 
 #define DOFORALL(x) {for(size_t i=0;i<m*n;i++)x}
 
@@ -6,14 +6,13 @@ namespace common {
 	Matrix::Matrix() : m(0), n(0), v(nullptr) {}
 
 	Matrix::Matrix(size_t m, size_t n) : m(m), n(n) {
-		assert(m!=0, "matrix height must be nonzero");
-		assert(n!=0, "matrix width must be nonzero");
+		assert(m!=0&&n!=0);
 
 		v=new float[m*n] {0};
 	}
 
 	Matrix::Matrix(size_t m, size_t n, std::vector<float> init) : Matrix(m, n) {
-		assert(m*n==init.size(), "matrix init list must be of same size");
+		assert(m*n==init.size());
 
 		memcpy(v, init.data(), m*n*sizeof(float));
 	}
@@ -43,6 +42,12 @@ namespace common {
 		return v[i*n+j];
 	}
 
+	Matrix Matrix::forEach(UnaryFloatFunc func) {
+		Matrix b(m, n);
+		for (size_t i=0; i<m*n; i++) b.v[i]=func(v[i]);
+		return b;
+	}
+
 	Matrix Matrix::operator-() const {
 		Matrix r(m, n);
 		DOFORALL(r.v[i]=-v[i];);
@@ -50,8 +55,7 @@ namespace common {
 	}
 
 	Matrix Matrix::operator+(const Matrix& o) const {
-		assert(m==o.m, "matrix addition must be of same height");
-		assert(n==o.n, "matrix addition must be of same width");
+		assert(m==o.m&&n==o.n);
 
 		Matrix r(m, n);
 		DOFORALL(r.v[i]=v[i]+o.v[i];);
@@ -59,8 +63,7 @@ namespace common {
 	}
 
 	Matrix& Matrix::operator+=(const Matrix& o) {
-		assert(m==o.m, "matrix addition must be of same height");
-		assert(n==o.n, "matrix addition must be of same width");
+		assert(m==o.m&&n==o.n);
 
 		DOFORALL(v[i]+=o.v[i];);
 		return *this;
@@ -71,15 +74,14 @@ namespace common {
 	}
 
 	Matrix& Matrix::operator-=(const Matrix& o) {
-		assert(m==o.m, "matrix addition must be of same height");
-		assert(n==o.n, "matrix addition must be of same width");
+		assert(m==o.m&&n==o.n);
 
 		DOFORALL(v[i]-=o.v[i];);
 		return *this;
 	}
 
 	Matrix Matrix::operator*(const Matrix& o) const {
-		assert(n==o.m, "invalid matrix multiplication dims");
+		assert(n==o.m);
 
 		size_t p=o.n;
 		Matrix r(m, p);

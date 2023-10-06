@@ -49,8 +49,16 @@ Color gradient(float t, std::vector<Color> arr) {
 	return a+Color(dec*ba.r, dec*ba.g, dec*ba.b);
 }
 
+struct Trail {
+	struct TrailPt {
+		Float2 pos;
+		Color col;
+	};
+	std::vector<TrailPt>trailPts;
+};
+
 struct VerletIntegrationDemo : GameEngine {
-	const size_t numSubSteps=3;
+	const size_t numSubSteps=6;
 	float deltaTime=0;
 	float totalDeltaTime=0;
 
@@ -63,16 +71,19 @@ struct VerletIntegrationDemo : GameEngine {
 
 	//simulation states
 	bool running=true;
-	Particle* mouseParticle=nullptr;
-	Particle* hoverParticle=nullptr;
-	Particle* constraintStart=nullptr;
-	Particle* springStart=nullptr;
 	bool addingBunch=false;
-	Float2 bunchStart;
 	bool addingJelly=false;
-	std::vector<Float2> jellyOutline;
-	bool toDebug=false;
 
+	//user input values
+	Particle* mousePtc=nullptr;
+	Particle* hoverPtc=nullptr;
+	Particle* cstStart=nullptr;
+	Particle* sprStart=nullptr;
+	Float2 bunchStart;
+	std::vector<Float2> jellyOutline;
+	std::vector<Trail> trails;
+
+	bool toDebug=false;
 	Stopwatch updateWatch, renderWatch, postProcessWatch;
 
 	Shader crtShader, blueprintShader;
@@ -150,9 +161,7 @@ struct VerletIntegrationDemo : GameEngine {
 
 		//remove single element
 		if (Keyboard::isKeyPressed(Keyboard::X)) {
-			mouseParticle=nullptr;
-			constraintStart=nullptr;
-			springStart=nullptr;
+			mousePtc=hoverPtc=cstStart=sprStart=nullptr;
 
 			int radFactor=1+4*Keyboard::isKeyPressed(Keyboard::LControl);
 			//for every Particle
@@ -197,10 +206,10 @@ struct VerletIntegrationDemo : GameEngine {
 		}
 
 		//which particle is unde the mouse?
-		hoverParticle=nullptr;
+		hoverPtc=nullptr;
 		for (auto& p:particles) {
 			if (length(mousePos-p.pos)<p.rad) {
-				hoverParticle=&p;
+				hoverPtc=&p;
 				break;
 			}
 		}
@@ -208,16 +217,16 @@ struct VerletIntegrationDemo : GameEngine {
 
 	void onMouseDown(Mouse::Button button) override {
 		switch (button) {
-			case Mouse::Left:
-			{//set mouse particle
-				mouseParticle=hoverParticle;
+			//set mouse particle
+			case Mouse::Left: {
+				mousePtc=hoverPtc;
 				break;
 			}
-			case Mouse::Middle:
-			{//add/remove particle from collision detection(ghosting)
-				if (mouseParticle) mouseParticle->ghosted^=true;
+			//add/remove particle from collision detection(ghosting)
+			case Mouse::Middle: {
+				if (mousePtc) mousePtc->ghosted^=true;
 				else {
-					if (hoverParticle) hoverParticle->ghosted^=true;
+					if (hoverPtc) hoverPtc->ghosted^=true;
 
 					Constraint* cToGhost=nullptr;
 					for (auto& c:constraints) {
@@ -231,9 +240,9 @@ struct VerletIntegrationDemo : GameEngine {
 				}
 				break;
 			}
-			case Mouse::Right:
-			{//add/remove particle from dynamics(locking)
-				if (mouseParticle) mouseParticle->locked^=true;
+			//add/remove particle from dynamics(locking)
+			case Mouse::Right: {
+				if (mousePtc) mousePtc->locked^=true;
 				else {
 					Particle* toLock=nullptr;
 					for (auto& p:particles) {
@@ -247,53 +256,46 @@ struct VerletIntegrationDemo : GameEngine {
 	}
 
 	void onMouseUp(Mouse::Button button) override {
-		if (button==Mouse::Left) mouseParticle=nullptr;
+		if (button==Mouse::Left) mousePtc=nullptr;
 	}
 
 	void onKeyDown(Keyboard::Key key) override {
 		switch (key) {
 		//pause/play
-			case Keyboard::Space:
-			{
-				mouseParticle=nullptr;
-				constraintStart=nullptr;
-				springStart=nullptr;
+			case Keyboard::Space: {
+				mousePtc=nullptr;
+				cstStart=nullptr;
+				sprStart=nullptr;
 				running^=true;
 				break;
 			}
 			//add elements
 			case Keyboard::A: particles.push_back(Particle(mousePos)); break;
-			case Keyboard::C:
-			{
-				constraintStart=hoverParticle;
+			case Keyboard::C: {
+				cstStart=hoverPtc;
 				break;
 			}
-			case Keyboard::S:
-			{
-				springStart=hoverParticle;
+			case Keyboard::S: {
+				sprStart=hoverPtc;
 				break;
 			}
-			case Keyboard::B:
-			{
+			case Keyboard::B: {
 				addingBunch=true;
 				bunchStart=mousePos;
 				break;
 			}
-			case Keyboard::J:
-			{
+			case Keyboard::J: {
 				addingJelly=true;
 				jellyOutline.push_back(mousePos);
 				break;
 			}
 			//remove elements
-			case Keyboard::End:
-			{
+			case Keyboard::End: {
 				constraints.clear();
 				springs.clear();
 				break;
 			}
-			case Keyboard::Delete:
-			{
+			case Keyboard::Delete: {
 				bool toClear=particles.size()+constraints.size()+springs.size()==0;
 				if (!toClear) {
 					std::cout<<"Do you want to remove everything?";
@@ -301,6 +303,7 @@ struct VerletIntegrationDemo : GameEngine {
 					if (response=='y'||response=='Y') toClear=true;
 				}
 				if (toClear) {
+					mousePtc=hoverPtc=cstStart=sprStart=nullptr;
 					constraints.clear();
 					springs.clear();
 					particles.clear();
@@ -308,8 +311,7 @@ struct VerletIntegrationDemo : GameEngine {
 				break;
 			}
 			//import/export
-			case Keyboard::I:
-			{
+			case Keyboard::I: {
 				bool toLoad=particles.size()+constraints.size()+springs.size()==0;
 				if (!toLoad) {
 					std::cout<<"Do you want to override current?";
@@ -395,8 +397,7 @@ struct VerletIntegrationDemo : GameEngine {
 				}
 				break;
 			}
-			case Keyboard::E:
-			{
+			case Keyboard::E: {
 				if (particles.size()+constraints.size()+springs.size()==0) {
 					std::cout<<"Nothing to export.\n";
 				} else {
@@ -456,24 +457,21 @@ struct VerletIntegrationDemo : GameEngine {
 	void onKeyUp(Keyboard::Key key) override {
 		switch (key) {
 			//add elements
-			case Keyboard::C:
-			{
-				if (constraintStart&&hoverParticle&&hoverParticle!=constraintStart) {
-					constraints.push_back(Constraint(*constraintStart, *hoverParticle));
+			case Keyboard::C: {
+				if (cstStart&&hoverPtc&&hoverPtc!=cstStart) {
+					constraints.push_back(Constraint(*cstStart, *hoverPtc));
 				}
-				constraintStart=nullptr;
+				cstStart=nullptr;
 				break;
 			}
-			case Keyboard::S:
-			{
-				if (springStart&&hoverParticle&&hoverParticle!=springStart) {
-					springs.push_back(Spring(*springStart, *hoverParticle));
+			case Keyboard::S: {
+				if (sprStart&&hoverPtc&&hoverPtc!=sprStart) {
+					springs.push_back(Spring(*sprStart, *hoverPtc));
 				}
-				springStart=nullptr;
+				sprStart=nullptr;
 				break;
 			}
-			case Keyboard::B:
-			{
+			case Keyboard::B: {
 				addingBunch=false;
 				AABB bunchBounds(bunchStart, mousePos);
 				for (float x=bunchBounds.min.x; x<bunchBounds.max.x; x+=2*Particle::defRad) {
@@ -494,8 +492,7 @@ struct VerletIntegrationDemo : GameEngine {
 				}
 				break;
 			}
-			case Keyboard::J:
-			{
+			case Keyboard::J: {
 				addingJelly=false;
 
 				//ray casting algorithm
@@ -574,7 +571,7 @@ struct VerletIntegrationDemo : GameEngine {
 	}
 
 	void update(float actualDeltaTime) override {
-		if(toDebug) updateWatch.start();
+		if (toDebug) updateWatch.start();
 
 		//update shader, set dt lower bound
 		totalDeltaTime+=actualDeltaTime;
@@ -582,24 +579,24 @@ struct VerletIntegrationDemo : GameEngine {
 		deltaTime=MIN(actualDeltaTime, 1.f/60);
 
 		//mouse particle dynamics
-		if (mouseParticle) {
+		if (mousePtc) {
 			if (running) {
 				//more of a dragging motion.
-				if (!mouseParticle->locked) {
-					Float2 sub=mousePos-mouseParticle->pos;
-					mouseParticle->pos+=sub*deltaTime;
+				if (!mousePtc->locked) {
+					Float2 sub=mousePos-mousePtc->pos;
+					mousePtc->pos+=sub*deltaTime;
 				}
 			} else {
 				//set mouse Particle to mouse pos.
-				mouseParticle->pos=mouseParticle->oldpos=mousePos;
+				mousePtc->pos=mousePtc->oldpos=mousePos;
 				//reset connectors
 				for (auto& c:constraints) {
-					if (mouseParticle==c.a||mouseParticle==c.b) {
+					if (mousePtc==c.a||mousePtc==c.b) {
 						c.restLen=length(c.a->pos-c.b->pos);
 					}
 				}
 				for (auto& s:springs) {
-					if (mouseParticle==s.a||mouseParticle==s.b) {
+					if (mousePtc==s.a||mousePtc==s.b) {
 						s.restLen=length(s.a->pos-s.b->pos);
 					}
 				}
@@ -614,12 +611,12 @@ struct VerletIntegrationDemo : GameEngine {
 			}
 		}
 
-		if(toDebug) updateWatch.stop();
+		if (toDebug) updateWatch.stop();
 	}
 
 	void render() override {
 		if (toDebug) renderWatch.start();
-		clear(running?Color(35, 35, 35):Color(0, 0, 0, 0));
+		clear(running?Color(51, 51, 51):Color(0, 0, 0, 0));
 
 		//draw bunch bounds
 		if (addingBunch) {
@@ -640,10 +637,25 @@ struct VerletIntegrationDemo : GameEngine {
 			}
 		}
 
+		//show particle "forces"
+		if (Keyboard::isKeyPressed(Keyboard::F)) {
+			for (auto& p:particles) {
+				Float2 vel=(p.pos-p.oldpos)/deltaTime;
+				drawArrow(p.pos, p.pos+vel, Color(0x2222ffff));
+				Float2 force=p.oldforce/p.mass*deltaTime*10;
+				float dpNormal=dot(vel, force)/(length(vel)*length(force));
+				float theta01=acosf(dpNormal)/PI;
+
+				float redVal=sqrtf(1-powf(theta01-1, 2));
+				float greenVal=sqrtf(1-theta01*theta01);
+				drawArrow(p.pos, p.pos+force, Color(255*redVal, 255*greenVal, 80));
+			}
+		}
+
 		//draw mouse particle highlight
-		if (running&&mouseParticle) {
+		if (running&&mousePtc) {
 			float factor=1.5f+(sinf(totalDeltaTime*3.)+1)/4;
-			fillCircle(mouseParticle->pos, mouseParticle->rad*factor, Color(0x666666FF));
+			fillCircle(mousePtc->pos, mousePtc->rad*factor, Color(0x666666FF));
 		}
 
 		//draw constraints
@@ -708,44 +720,29 @@ struct VerletIntegrationDemo : GameEngine {
 				if (p.locked) {
 					//draw x
 					float v=p.rad/1.85f;
-					drawThickLine(p.pos-v, p.pos+v, 1, ghostedRed);
-					drawThickLine(p.pos+Float2(-v, v), p.pos+Float2(+v, -v), 1, ghostedRed);
+					drawThickLine(p.pos-v, p.pos+v, 2, ghostedRed);
+					drawThickLine(p.pos+Float2(-v, v), p.pos+Float2(+v, -v), 2, ghostedRed);
 				}
 			} else drawCircle(p.pos, p.rad, p.locked?ghostedRed:toShowSpeed?speedCol:ghostedWhite);
 		}
 
-		//show particle "forces"
-		if (Keyboard::isKeyPressed(Keyboard::F)) {
-			for (auto& p:particles) {
-				Float2 vel=(p.pos-p.oldpos)/deltaTime;
-				drawArrow(p.pos, p.pos+vel, Color::Blue);
-				Float2 force=p.oldforce/p.mass*deltaTime*10;
-				float dpNormal=dot(vel, force)/(length(vel)*length(force));
-				float theta01=acosf(dpNormal)/PI;
-
-				float redVal=sqrtf(1-powf(theta01-1, 2));
-				float greenVal=sqrtf(1-theta01*theta01);
-				drawArrow(p.pos, p.pos+force, Color(255*redVal, 255*greenVal, 40));
-			}
-		}
-
 		//show possible future constraint
-		if (constraintStart) {
+		if (cstStart) {
 			int ybVal=128+127*sinf(totalDeltaTime*4);
 			Color yellowBlack(ybVal, ybVal, 20);
-			fillCircle(constraintStart->pos, constraintStart->rad, yellowBlack);
-			drawArrow(constraintStart->pos, mousePos, yellowBlack);
+			fillCircle(cstStart->pos, cstStart->rad, yellowBlack);
+			drawArrow(cstStart->pos, mousePos, yellowBlack);
 		}
 
 		//possible future spring
-		if (springStart) {
+		if (sprStart) {
 			int mgVal=119*cosf(totalDeltaTime*5);
 			Color magentaCyan(120+mgVal, 120-mgVal, 240);
-			fillCircle(springStart->pos, springStart->rad, magentaCyan);
-			drawArrow(springStart->pos, mousePos, magentaCyan);
+			fillCircle(sprStart->pos, sprStart->rad, magentaCyan);
+			drawArrow(sprStart->pos, mousePos, magentaCyan);
 		}
 
-		if(toDebug) renderWatch.stop(), postProcessWatch.start();
+		if (toDebug) renderWatch.stop(), postProcessWatch.start();
 
 		//no need for render textures!
 		shaderTex.update(*this);
@@ -755,7 +752,6 @@ struct VerletIntegrationDemo : GameEngine {
 		Shader* currShader=&(running?crtShader:blueprintShader);
 		currShader->setUniform("MainTex", shaderTex);
 		draw(sf::Sprite(shaderTex), currShader);
-
 
 		if (toDebug) {
 			postProcessWatch.stop();

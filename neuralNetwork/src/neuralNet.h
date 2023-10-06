@@ -6,8 +6,6 @@
 using namespace common;
 
 #include <random>
-#include <functional>
-
 std::mt19937_64 generator(time(NULL));
 std::uniform_real_distribution<float> diastribution(0, 1);
 
@@ -28,10 +26,37 @@ Matrix operator&(const Matrix& a, const Matrix& b) {
 	return c;
 }
 
-//never forget rule of three(4)!
 struct NeuralNet {
+	//activation functions
+	static inline float reLu(float x) {
+		return x<0?0:x;
+	}
+	static inline float sigmoid(float x) {
+		return 1/(1+expf(-x));
+	}
+
+	static UnaryFloatFunc ddx(UnaryFloatFunc func) {
+		return [func] (float x) {
+			const float h=.00001f;
+			return (func(x+h)-func(x))/h;
+		};
+	}
+
+	//classifier prediction
+	static Matrix softmax(const Matrix& a) {
+		Matrix b(a.m, a.n);
+		for (size_t j=0; j<a.n; j++) {
+			float sum=0;//thru each column
+			for (size_t i=0; i<a.m; i++) sum+=(b(i, j)=expf(a(i, j)));
+			for (size_t i=0; i<a.m; i++) b(i, j)/=sum;//scale
+		}
+		return b;
+	}
+
 	size_t numLayers, inputSz, outputSz;
 	Matrix* weights, * biases;
+	UnaryFloatFunc hiddenActivation=reLu;
+	std::function<Matrix(const Matrix&)> outputActivation=softmax;
 
 	NeuralNet() :numLayers(0), inputSz(0), outputSz(0), weights(nullptr), biases(nullptr) {}
 
@@ -81,36 +106,6 @@ struct NeuralNet {
 		return *this;
 	}
 
-	//activation functions
-	static inline float reLu(float x) {
-		return x<0?0:x;
-	}
-	static Matrix reLu(const Matrix& a) {
-		Matrix b(a.m, a.n);
-		for (size_t i=0; i<a.m*a.n; i++) b.v[i]=reLu(a.v[i]);
-		return b;
-	}
-
-	static inline float ddxReLu(float x) {
-		return x>0;
-	}
-	static Matrix ddxReLu(const Matrix& a) {
-		Matrix b(a.m, a.n);
-		for (size_t i=0; i<a.m*a.n; i++) b.v[i]=ddxReLu(a.v[i]);
-		return b;
-	}
-
-	//classifier prediction
-	static Matrix softmax(const Matrix& a) {
-		Matrix b(a.m, a.n);
-		for (size_t j=0; j<a.n; j++) {
-			float sum=0;//thru each column
-			for (size_t i=0; i<a.m; i++) sum+=(b(i, j)=expf(a(i, j)));
-			for (size_t i=0; i<a.m; i++) b(i, j)/=sum;//scale
-		}
-		return b;
-	}
-
 	//gradient descent
 	[[nodiscard]] bool train(const Matrix& X, const Matrix& Y, size_t iter, float alpha, std::function<bool(NeuralNet&, Matrix&)> callback={}) {
 		size_t M=X.n;
@@ -128,7 +123,7 @@ struct NeuralNet {
 					for (size_t j=0; j<z.n; j++) z(i, j)+=b;
 				}
 
-				actvs[k+1]=k==numLayers-1?softmax(z):reLu(z);
+				actvs[k+1]=k==numLayers-1?outputActivation(z):z.forEach(hiddenActivation);
 			}
 
 			//backward propagation
@@ -138,7 +133,7 @@ struct NeuralNet {
 
 				Matrix dz=k==0?
 					actvs[numLayers]-Y:
-					weights[l+1].transpose()*pDz&ddxReLu(unact[l]);
+					weights[l+1].transpose()*pDz&unact[l].forEach(ddx(hiddenActivation));
 				deltW[l]=dz*actvs[l].transpose();
 
 				Matrix db(dz.m, 1);
@@ -167,12 +162,12 @@ struct NeuralNet {
 	}
 
 	Matrix predict(const Matrix& m) {
-		assert(m.m==input&&m.n==1);
+		assert(m.m==inputSz&&m.n==1);
 
 		Matrix a=m;
 		for (size_t i=0; i<numLayers; i++) {
 			Matrix z=weights[i]*a+biases[i];
-			a=(i==numLayers-1)?reLu(z):softmax(z);
+			a=(i==numLayers-1)?outputActivation(z):z.forEach(hiddenActivation);
 		}
 		return a;
 	}

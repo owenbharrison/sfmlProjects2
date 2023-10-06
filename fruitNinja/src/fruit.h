@@ -93,15 +93,15 @@ struct Fruit {
 		if (!getLocalizedAABB().containsPt(pt)) return false;
 
 		//optimized raycasting method
-		int numIx=0;
+		int numix=0;
 		for (int i=0, len=pts.size(); i<len; i++) {
 			Float2 a=pts[i];
 			Float2 b=pts[(i+1)%len];
 			Float2 c=pt, d(c.x+1, c.y);
 			Float2 tu=lineLineIntersection(a, b, c, d);
-			if (tu.x>=0&&tu.x<=1&&tu.y>=0) numIx++;
+			if (tu.x>=0&&tu.x<=1&&tu.y>=0) numix++;
 		}
 
-		return numIx%2==1;
+		return numix%2==1;
 	}
 };

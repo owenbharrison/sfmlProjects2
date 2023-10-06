@@ -63,33 +63,27 @@ namespace common {
 			//polling
 			for (sf::Event e; pollEvent(e);) {
 				switch (e.type) {
-					case sf::Event::Closed:
-					{
+					case sf::Event::Closed: {
 						close();
 						return;
 					}
-					case sf::Event::MouseButtonPressed:
-					{
+					case sf::Event::MouseButtonPressed: {
 						onMouseDown(e.mouseButton.button);
 						break;
 					}
-					case sf::Event::MouseButtonReleased:
-					{
+					case sf::Event::MouseButtonReleased: {
 						onMouseUp(e.mouseButton.button);
 						break;
 					}
-					case sf::Event::MouseWheelScrolled:
-					{
+					case sf::Event::MouseWheelScrolled: {
 						onMouseScroll(e.mouseWheelScroll.delta);
 						break;
 					}
-					case sf::Event::KeyPressed:
-					{
+					case sf::Event::KeyPressed: {
 						onKeyDown(e.key.code);
 						break;
 					}
-					case sf::Event::KeyReleased:
-					{
+					case sf::Event::KeyReleased: {
 						onKeyUp(e.key.code);
 						break;
 					}
