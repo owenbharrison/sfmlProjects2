@@ -17,13 +17,6 @@ inline float clamp(float x, float a, float b) {
 }
 
 struct NeuralNetDemo : GameEngine {
-	NeuralNetDemo(size_t w, size_t h, std::string t) : GameEngine(w, h, t) {}
-
-	~NeuralNetDemo() {
-		delete[] grid;
-		delete[] pixels;
-	}
-
 	const size_t gridSz=28, gridLen=gridSz*gridSz;
 	float* grid=nullptr;
 	Uint8* pixels=nullptr;
@@ -34,6 +27,13 @@ struct NeuralNetDemo : GameEngine {
 
 	NeuralNet neuralNet;
 
+	NeuralNetDemo(size_t w, size_t h, std::string t) : GameEngine(w, h, t) {}
+
+	~NeuralNetDemo() {
+		delete[] grid;
+		delete[] pixels;
+	}
+
 	bool init() override {
 		grid=new float[gridLen] {0};
 		pixels=new Uint8[gridLen*4]{255};
@@ -41,15 +41,13 @@ struct NeuralNetDemo : GameEngine {
 		if (!gridShader.loadFromFile("shader/square.glsl", Shader::Fragment)) return false;
 		gridShader.setUniform("Resolution", Vector2f(width, height));
 
-		{
-			Float2 ctr(width/2, height/2);
-			float dim=MIN(width, height)/2;
-			gridBox=AABB(ctr-dim, ctr+dim);
-		}
+		Float2 ctr(width/2, height/2);
+		float dim=MIN(width, height)/2;
+		gridBox=AABB(ctr-dim, ctr+dim);
 
-		neuralNet=NeuralNet({gridLen, 48, 16, 10});
+		neuralNet=NeuralNet({gridLen, 32, 16, 10});
 		neuralNet.hiddenActivation=tanhf;
-		const size_t M=2500;
+		const size_t M=1750;
 		Matrix X(neuralNet.inputSz, M);
 		Matrix Y(neuralNet.outputSz, M);
 
@@ -102,7 +100,7 @@ struct NeuralNetDemo : GameEngine {
 			std::cout<<"acc: "<<int(100*pct)<<"% cost: "<<cost<<'\n';
 
 			//quit early
-			return pct>.97f&&cost<25;
+			return pct>.97f&&cost<35;
 		})) return false;
 		trainWatch.stop();
 		std::cout<<"training finished in: "<<trainWatch.getMillis()<<"ms\n";
@@ -114,13 +112,13 @@ struct NeuralNetDemo : GameEngine {
 		switch (key) {
 			//clear grid	
 			case Keyboard::C: {
-				memset(grid, 0, gridLen*sizeof(float));
+				memset(grid, 0, sizeof(float)*gridLen);
 				break;
 			}
 			//neural net prediction
 			case Keyboard::Space: {
 				Matrix input(gridLen, 1);
-				memcpy(input.v, grid, gridLen*sizeof(float));
+				memcpy(input.v, grid, sizeof(float)*gridLen);
 				Matrix output=neuralNet.predict(input);
 
 				std::cout<<"pred: \n";

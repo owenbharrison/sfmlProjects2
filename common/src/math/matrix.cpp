@@ -14,11 +14,11 @@ namespace common {
 	Matrix::Matrix(size_t m, size_t n, std::vector<float> init) : Matrix(m, n) {
 		assert(m*n==init.size());
 
-		memcpy(v, init.data(), m*n*sizeof(float));
+		memcpy(v, init.data(), sizeof(float)*m*n);
 	}
 
 	Matrix::Matrix(const Matrix& o) : Matrix(o.m, o.n) {
-		memcpy(v, o.v, m*n*sizeof(float));
+		memcpy(v, o.v, sizeof(float)*m*n);
 	}
 
 	Matrix::~Matrix() {
@@ -33,7 +33,7 @@ namespace common {
 		m=o.m, n=o.n;
 		v=new float[m*n];
 
-		memcpy(v, o.v, m*n*sizeof(float));
+		memcpy(v, o.v, sizeof(float)*m*n);
 
 		return *this;
 	}

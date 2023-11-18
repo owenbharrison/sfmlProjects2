@@ -43,7 +43,7 @@ struct AsteroidsDemo : GameEngine {
 		srand(time(NULL));
 		Float2 resolution(width, height);
 
-		bounds=AABB(-30, resolution+30);
+		bounds=AABB(-15, resolution+15);
 
 		ship=Ship(resolution/2, 17);
 
@@ -73,11 +73,24 @@ struct AsteroidsDemo : GameEngine {
 	}
 
 	void onKeyDown(Keyboard::Key key) override {
-		if (key==Keyboard::Space&&bulletTimer<0) {
-			bulletTimer=.347f;
-
-			Float2 vel=polarToCartesian(140, ship.rot);
-			bullets.push_back(Bullet(ship.pos, vel));
+		switch(key){
+			case Keyboard::Space: {
+				if (bulletTimer<0) {
+					bulletTimer=0;//.347f;
+					for (size_t i=0; i<5; i++) {
+						float offset=.1f*PI*(.5f-rand01());
+						float speed=175+50*rand01();
+						Float2 vel=polarToCartesian(speed, ship.rot+offset);
+						bullets.push_back(Bullet(ship.pos, vel));
+						ship.boost(-5*speed);
+					}
+				}
+				break;
+			}
+			case Keyboard::I: {
+				init();
+				break;
+			}
 		}
 	}
 
@@ -150,7 +163,7 @@ struct AsteroidsDemo : GameEngine {
 		{
 			//ship raycasting
 			if (Keyboard::isKeyPressed(Keyboard::R)) {
-				const size_t num=256;
+				const size_t num=80;
 				const float rad=134.7f, fov=.9f*PI;
 				std::pair<Float2, Color> lToDraw[num];
 				for (size_t i=0; i<num; i++) {
@@ -190,11 +203,9 @@ struct AsteroidsDemo : GameEngine {
 					} else lToDraw[i]={vB, Color::Green};
 				}
 
-				Float2 prev=ship.pos;
 				for (size_t i=0; i<num; i++) {
 					const auto& l=lToDraw[i];
-					drawLine(prev, l.first, l.second);
-					prev=l.first;
+					drawLine(ship.pos, l.first, l.second);
 				}
 			}
 		

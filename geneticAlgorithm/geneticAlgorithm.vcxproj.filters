@@ -15,26 +15,12 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="src\phys\constraint.h">
+    <ClInclude Include="src\population.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\phys\particle.h">
+    <ClInclude Include="src\dna.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\phys\spring.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\phys\physicsSolver.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\verletIntegrationDemo.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="shader\crt.glsl" />
-    <None Include="shader\blueprint.glsl" />
-    <None Include="shader\blueprint2.glsl" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\main.cpp">

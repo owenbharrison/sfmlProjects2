@@ -22,7 +22,7 @@ struct Asteroid {
 
 	Asteroid(const Asteroid& a) : pos(a.pos), vel(a.vel), numPoints(a.numPoints) {
 		outline=new Float2[numPoints];
-		memcpy(outline, a.outline, numPoints*sizeof(Float2));
+		memcpy(outline, a.outline, sizeof(Float2)*numPoints);
 	}
 
 	~Asteroid() {
@@ -38,7 +38,7 @@ struct Asteroid {
 		vel=a.vel;
 		numPoints=a.numPoints;
 		outline=new Float2[numPoints];
-		memcpy(outline, a.outline, numPoints*sizeof(Float2));
+		memcpy(outline, a.outline, sizeof(Float2)*numPoints);
 
 		return *this;
 	}

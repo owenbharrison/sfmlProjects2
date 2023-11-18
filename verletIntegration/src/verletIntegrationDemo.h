@@ -8,15 +8,10 @@ using namespace sf;
 #include "phys/physicsSolver.h"
 
 #include "io/stopwatch.h"
+#include "io/slider.h"
 
 inline float rand01() {
 	return rand()/float(RAND_MAX);
-}
-
-inline float clamp(float t, float a, float b) {
-	if (t<a) return a;
-	if (t>b) return b;
-	return t;
 }
 
 inline float snapTo(float a, float b) {
@@ -24,8 +19,8 @@ inline float snapTo(float a, float b) {
 }
 
 Float2 getClosePt(Float2 a, Float2 b, Float2 p) {
-	Float2 ba=b-a, pa=p-a;
-	float t=clamp(dot(pa, ba)/dot(ba, ba), 0, 1);
+	Float2 ba=b-a;
+	float t=invVecLerp(p-a, ba);
 	return a+t*ba;
 }
 
@@ -36,7 +31,7 @@ const std::vector<Color> stressGradient{
 	Color::Yellow,
 	Color::Red
 };
-Color gradient(float t, std::vector<Color> arr) {
+Color gradient(float t, const std::vector<Color>& arr) {
 	t=clamp(t, 0, 1);
 	if (t==0) return arr.front();
 	if (t==1) return arr.back();
@@ -48,14 +43,6 @@ Color gradient(float t, std::vector<Color> arr) {
 	Color a=arr[whole], ba=arr[whole+1]-a;
 	return a+Color(dec*ba.r, dec*ba.g, dec*ba.b);
 }
-
-struct Trail {
-	struct TrailPt {
-		Float2 pos;
-		Color col;
-	};
-	std::vector<TrailPt>trailPts;
-};
 
 struct VerletIntegrationDemo : GameEngine {
 	const size_t numSubSteps=6;
@@ -81,7 +68,6 @@ struct VerletIntegrationDemo : GameEngine {
 	Particle* sprStart=nullptr;
 	Float2 bunchStart;
 	std::vector<Float2> jellyOutline;
-	std::vector<Trail> trails;
 
 	bool toDebug=false;
 	Stopwatch updateWatch, renderWatch, postProcessWatch;
@@ -104,7 +90,7 @@ struct VerletIntegrationDemo : GameEngine {
 
 	void fillPie(Float2 p, float r, float start, float end, Color col=Color::White) {
 		const size_t num=24;
-		VertexArray pie(sf::TriangleFan, num+2);
+		VertexArray pie(TriangleFan, num+2);
 		pie[0]=Vertex(Vector2f(p.x, p.y), col);
 		for (size_t i=0; i<=num; i++) {
 			float pct=float(i)/num;
@@ -124,7 +110,8 @@ struct VerletIntegrationDemo : GameEngine {
 		//physics setup
 		solver=PhysicsSolver(&particles, &constraints, &springs);
 		solver.initGravity(Float2(0, 320));
-		solver.initBounds(bounds=AABB(0, Float2(width, height)));
+		Float2 resolution(width, height);
+		solver.initBounds(bounds=AABB(0, resolution));
 		if (!solver.initSpacialHash(2.1f*Particle::defRad)) return false;
 
 		//shader setup
@@ -164,48 +151,41 @@ struct VerletIntegrationDemo : GameEngine {
 			mousePtc=hoverPtc=cstStart=sprStart=nullptr;
 
 			int radFactor=1+4*Keyboard::isKeyPressed(Keyboard::LControl);
-			//for every Particle
+			//check all particles against mouse
 			for (auto pit=particles.begin(); pit!=particles.end();) {
 				auto& p=*pit;
 				//if touching mouse
 				if (length(mousePos-p.pos)<radFactor*p.rad) {
-					//remove all connecting connectors
-					for (auto cit=constraints.begin(); cit!=constraints.end();) {
-						auto& c=*cit;
-						if (&p==c.a||&p==c.b) cit=constraints.erase(cit);
-						else cit++;
-					}
-					for (auto sit=springs.begin(); sit!=springs.end();) {
-						auto& s=*sit;
-						if (&p==s.a||&p==s.b) sit=springs.erase(sit);
-						else sit++;
-					}
+					//remove all connectors
+					constraints.erase(std::remove_if(constraints.begin(), constraints.end(),
+						[&p] (const Constraint& c) {
+						return &p==c.a||&p==c.b;
+					}), constraints.end());
+					springs.erase(std::remove_if(springs.begin(), springs.end(),
+						[&p] (const Spring& s) {
+						return &p==s.a||&p==s.b;
+					}), springs.end());
 
-					//remove Particle
+					//remove rarticle
 					pit=particles.erase(pit);
 				} else pit++;
 			}
-			//for every Constraint
-			for (auto cit=constraints.begin(); cit!=constraints.end();) {
-				auto& c=*cit;
+			constraints.erase(std::remove_if(constraints.begin(), constraints.end(),
+				[this, &radFactor] (const Constraint& c) {
 				Float2 ba=c.b->pos-c.a->pos;
 				Float2 closePt=getClosePt(c.a->pos, c.b->pos, mousePos);
-				if (length(mousePos-closePt)<c.rad*radFactor) {
-					cit=constraints.erase(cit);
-				} else cit++;
-			}
-			//for every Spring
-			for (auto sit=springs.begin(); sit!=springs.end();) {
-				auto& s=*sit;
+				return length(mousePos-closePt)<radFactor*c.rad;
+			}), constraints.end());
+			springs.erase(std::remove_if(springs.begin(), springs.end(),
+				[this, &radFactor] (const Spring& s) {
+				Float2 ba=s.b->pos-s.a->pos;
 				Float2 closePt=getClosePt(s.a->pos, s.b->pos, mousePos);
-				float rad=MIN(s.a->rad, s.b->rad);
-				if (length(mousePos-closePt)<radFactor*rad) {
-					sit=springs.erase(sit);
-				} else sit++;
-			}
+				float rad=.5f*(s.a->rad+s.b->rad);
+				return length(mousePos-closePt)<radFactor*rad;
+			}), springs.end());
 		}
 
-		//which particle is unde the mouse?
+		//which particle is under the mouse?
 		hoverPtc=nullptr;
 		for (auto& p:particles) {
 			if (length(mousePos-p.pos)<p.rad) {
@@ -225,31 +205,21 @@ struct VerletIntegrationDemo : GameEngine {
 			//add/remove particle from collision detection(ghosting)
 			case Mouse::Middle: {
 				if (mousePtc) mousePtc->ghosted^=true;
-				else {
-					if (hoverPtc) hoverPtc->ghosted^=true;
+				else if (hoverPtc) hoverPtc->ghosted^=true;
 
-					Constraint* cToGhost=nullptr;
-					for (auto& c:constraints) {
-						if (length(mousePos-c.a->pos)<c.a->rad) continue;
-						if (length(mousePos-c.b->pos)<c.b->rad) continue;
+				for (auto& c:constraints) {
+					if (length(mousePos-c.a->pos)<c.a->rad) continue;
+					if (length(mousePos-c.b->pos)<c.b->rad) continue;
 
-						Float2 closePt=getClosePt(c.a->pos, c.b->pos, mousePos);
-						if (length(mousePos-closePt)<c.rad) cToGhost=&c;
-					}
-					if (cToGhost) cToGhost->ghosted^=true;
+					Float2 closePt=getClosePt(c.a->pos, c.b->pos, mousePos);
+					if (length(mousePos-closePt)<c.rad) c.ghosted^=true;
 				}
 				break;
 			}
 			//add/remove particle from dynamics(locking)
 			case Mouse::Right: {
 				if (mousePtc) mousePtc->locked^=true;
-				else {
-					Particle* toLock=nullptr;
-					for (auto& p:particles) {
-						if (length(mousePos-p.pos)<p.rad) toLock=&p;
-					}
-					if (toLock) toLock->locked^=true;
-				}
+				else if (hoverPtc) hoverPtc->locked^=true;
 				break;
 			}
 		}
@@ -261,11 +231,9 @@ struct VerletIntegrationDemo : GameEngine {
 
 	void onKeyDown(Keyboard::Key key) override {
 		switch (key) {
-		//pause/play
+			//pause/play
 			case Keyboard::Space: {
-				mousePtc=nullptr;
-				cstStart=nullptr;
-				sprStart=nullptr;
+				mousePtc=cstStart=sprStart=nullptr;
 				running^=true;
 				break;
 			}
@@ -334,10 +302,9 @@ struct VerletIntegrationDemo : GameEngine {
 					//parse line by line
 					std::cout<<"Input filename to import: ";
 					std::string filename; std::cin>>filename;
-					std::ifstream loadFile(filename);
-					if (loadFile) {
+					if (std::ifstream file(filename); file) {
 						int id=0;
-						for (std::string line; getline(loadFile, line);) {
+						for (std::string line; getline(file, line);) {
 							std::stringstream lineStream(line);
 							char junk;
 							switch (line[0]) {
@@ -387,13 +354,13 @@ struct VerletIntegrationDemo : GameEngine {
 								}
 							}
 						}
+						file.close();
 
 						std::cout<<"Successfully imported "
 							<<particles.size()<<" particles, "
 							<<constraints.size()<<" constraints, and "
 							<<springs.size()<<" springs from "<<filename<<'\n';
 					} else std::cout<<"Invalid filename.\n";
-					loadFile.close();
 				}
 				break;
 			}
@@ -405,21 +372,20 @@ struct VerletIntegrationDemo : GameEngine {
 					std::string filename; std::cin>>filename;
 
 					//check override
-					std::ifstream fileCheck(filename);
-					std::ofstream saveFile;
 					bool toSave=false;
-					if (fileCheck) {
+					std::ofstream file;
+					if (std::ifstream fileCheck(filename); fileCheck) {
 						std::cout<<"File already exists. Do you want to override it?";
 						char response; std::cin>>response;
 						if (response=='y'||response=='Y') {
-							saveFile.open(filename, std::ios::trunc);
 							toSave=true;
+							file.open(filename, std::ios::trunc);
 						} else std::cout<<"Export aborted.\n";
+						fileCheck.close();
 					} else {
-						saveFile.open(filename);
 						toSave=true;
+						file.open(filename);
 					}
-					fileCheck.close();
 
 					//somewhat like a obj file.
 					if (toSave) {
@@ -427,18 +393,18 @@ struct VerletIntegrationDemo : GameEngine {
 						//p [x] [y] [rad] [locked?] [ghosted?]
 						for (auto& p:particles) {
 							p.id=id++;
-							saveFile<<"p "<<p.pos.x<<' '<<p.pos.y
+							file<<"p "<<p.pos.x<<' '<<p.pos.y
 								<<' '<<p.rad<<' '<<p.locked<<' '<<p.ghosted<<'\n';
 						}
 
 						//c [i0] [i1] [rad] [ghosted?]
 						for (const auto& c:constraints) {
-							saveFile<<"c "<<c.a->id<<' '<<c.b->id<<' '
+							file<<"c "<<c.a->id<<' '<<c.b->id<<' '
 								<<c.rad<<' '<<c.ghosted<<'\n';
 						}
-						//s [i1] [i1] [len] [stiff] [damp]
+						//s [i0] [i1] [len] [stiff] [damp]
 						for (const auto& s:springs) {
-							saveFile<<"s "<<s.a->id<<' '<<s.b->id<<' '
+							file<<"s "<<s.a->id<<' '<<s.b->id<<' '
 								<<s.restLen<<' '<<s.stiffness<<' '<<s.damping<<'\n';
 						}
 
@@ -447,7 +413,7 @@ struct VerletIntegrationDemo : GameEngine {
 							<<constraints.size()<<" constraints, and "
 							<<springs.size()<<" springs to "<<filename<<'\n';
 					}
-					saveFile.close();
+					file.close();
 				}
 				break;
 			}
@@ -473,14 +439,14 @@ struct VerletIntegrationDemo : GameEngine {
 			}
 			case Keyboard::B: {
 				addingBunch=false;
-				AABB bunchBounds(bunchStart, mousePos);
-				for (float x=bunchBounds.min.x; x<bunchBounds.max.x; x+=2*Particle::defRad) {
-					for (float y=bunchBounds.min.y; y<bunchBounds.max.y; y+=2*Particle::defRad) {
+				AABB area(bunchStart, mousePos);
+				for (float x=area.min.x; x<area.max.x; x+=2*Particle::defRad) {
+					for (float y=area.min.y; y<area.max.y; y+=2*Particle::defRad) {
 						Float2 pos(rand01()-.5f+x, rand01()-.5f+y);
-						float rad=(.5f+.5f*rand01())*Particle::defRad;
 						if (!bounds.containsPt(pos)) continue;
 
 						bool toAdd=true;
+						float rad=(.5f+.5f*rand01())*Particle::defRad;
 						for (const auto& p:particles) {
 							if (length(pos-p.pos)<rad+p.rad) {
 								toAdd=false;
@@ -749,9 +715,9 @@ struct VerletIntegrationDemo : GameEngine {
 		clear();
 
 		//post processing
-		Shader* currShader=&(running?crtShader:blueprintShader);
-		currShader->setUniform("MainTex", shaderTex);
-		draw(sf::Sprite(shaderTex), currShader);
+		auto shader=&(running?crtShader:blueprintShader);
+		shader->setUniform("MainTex", shaderTex);
+		draw(Sprite(shaderTex), shader);
 
 		if (toDebug) {
 			postProcessWatch.stop();

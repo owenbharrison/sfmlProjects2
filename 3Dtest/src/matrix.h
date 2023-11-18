@@ -5,55 +5,51 @@
 template <size_t M, size_t N>
 struct Matrix {
 	static_assert(M>0&&N>0);
-	float v[M][N]{0.f};
+	float v[M*N]{0};
 
-	void operator=(const Matrix& in) {
-		memcpy(this->v, in.v, sizeof(float)*M*N);
+	Matrix& operator=(const Matrix& m) {
+		memcpy(v, m.v, sizeof(float)*M*N);
+		return *this;
 	}
 
-	bool operator==(const Matrix& in) {
-		for (size_t i=0; i<M; i++) {
-			for (size_t j=0; j<N; j++) {
-				if (this->v[i][j]!=in.v[i][j]) {
-					return false;
-				}
-			}
-		}
-		return true;
+	inline float& operator()(size_t i, size_t j) {
+		return v[i+N*j];
 	}
 
-	Matrix operator+(const Matrix& in) {
-		Matrix out;
-		for (size_t i=0; i<M; i++) {
-			for (size_t j=0; j<N; j++) {
-				out.v[i][j]=this->v[i][j]+in.v[i][j];
-			}
-		}
-		return out;
+	Matrix operator-() {
+		Matrix r;
+		for (size_t i=0; i<M*N; i++) r.v[i]=-v[i];
+		return r;
 	}
 
-	Matrix operator*(const float& in) {
-		Matrix out;
-		for (size_t i=0; i<M; i++) {
-			for (size_t j=0; j<N; j++) {
-				out.v[i][j]=this->v[i][j]*in;
-			}
-		}
-		return out;
+	Matrix operator+(const Matrix& m) {
+		Matrix r;
+		for (size_t i=0; i<M*N; i++) r.v[i]=v[i]+m.v[i];
+		return r;
+	}
+
+	Matrix operator-(const Matrix& m) {
+		return operator+(-m);
+	}
+
+	Matrix operator*(float f) {
+		Matrix r;
+		for (size_t i=0; i<M*N; i++) r.v[i]=f*v[i];
+		return r;
 	}
 };
 
 //by definition disallows incompatible dimensions
 template <size_t M, size_t N, size_t P>
 Matrix<M, P> operator*(const Matrix<M, N>& a, const Matrix<N, P>& b) {
-	Matrix<M, P> ab;
+	Matrix<M, P> r;
 	for (size_t i=0; i<M; i++) {
 		for (size_t j=0; j<P; j++) {
-			float sum=0.f;
-			for (size_t r=0; r<N; r++) {
-				sum+=a.v[i][r]*b.v[r][j];
+			float sum=0;
+			for (size_t k=0; k<N; k++) {
+				sum+=a(i, k)*b(k, j);
 			}
-			ab.v[i][j]=sum;
+			r(i, j)=sum;
 		}
 	}
 	return ab;
@@ -65,7 +61,7 @@ Matrix<N, M> transpose(const Matrix<M, N>& in) {
 	Matrix<N, M> out;
 	for (size_t i=0; i<M; i++) {
 		for (size_t j=0; j<N; j++) {
-			out.v[j][i]=in.v[i][j];
+			out(j, i)=in(i, j);
 		}
 	}
 	return out;

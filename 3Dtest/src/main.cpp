@@ -7,7 +7,7 @@
 #include <SFML/Graphics.hpp>
 using namespace sf;
 
-#define PI 3.1415926f
+#define PI 3.1415927f
 #define EPSILON 0.0001f
 
 #define NEAR_PLANE 0.001f
@@ -23,23 +23,23 @@ struct triIndex {
 struct triangle {
 	vec3d p[3];
 	Color col=Color::White;
-	float z[3]{0.f};
-	float shade=0.f;
+	float z[3]{0};
+	float shade=0;
 };
 
-float MIN(float a, float b) {
+inline float MIN(float a, float b) {
 	return a<b?a:b;
 }
-float MAX(float a, float b) {
+inline float MAX(float a, float b) {
 	return a>b?a:b;
 }
-float CLAMP(float t, float a, float b) {
+inline float CLAMP(float t, float a, float b) {
 	return MIN(MAX(t, a), b);
 }
-float LERP(float a, float b, float t) {
+inline float LERP(float a, float b, float t) {
 	return a+t*(b-a);
 }
-float INVLERP(float a, float b, float t) {
+inline float INVLERP(float a, float b, float t) {
 	return (t-a)/(b-a);
 }
 
@@ -109,16 +109,16 @@ struct mesh {
 };
 
 vec3d operator*(vec3d v, Mat4 m) {
-	auto prod=Matrix<1, 4>({v.x, v.y, v.z, v.w})*m;
-	return {prod.v[0][0], prod.v[0][1], prod.v[0][2], prod.v[0][3]};
+	auto prod=Matrix<1, 4>{v.x, v.y, v.z, v.w}*m;
+	return {prod(0, 0), prod(0, 1), prod(0, 2), prod(0, 3)};
 }
 
 vec3d vecIntersectPlane(vec3d planeP, vec3d planeN, vec3d l0, vec3d l1) {
 	planeN=normalize(planeN);
-	float planeD=-dot(planeN, planeP);
+	float planeD=dot(planeN, planeP);
 	float ad=dot(l0, planeN);
 	float bd=dot(l1, planeN);
-	float t=(-planeD-ad)/(bd-ad);
+	float t=(planeD-ad)/(bd-ad);
 	return l0+t*(l1-l0);
 }
 
@@ -132,7 +132,7 @@ int triangleClipAgainstPlane(vec3d planeP, vec3d planeN, triangle& in, triangle&
 	vec3d* insidePts[3]; int insidePtCt=0;
 	vec3d* outsidePts[3]; int outsidePtCt=0;
 
-	for (int i=0; i<3; i++) {
+	for (size_t i=0; i<3; i++) {
 		vec3d &p=in.p[i];
 		if (dist(p)>=0.f) insidePts[insidePtCt++]=&p;
 		else outsidePts[outsidePtCt++]=&p;
@@ -237,36 +237,29 @@ Mat4 createPointAtMatrix(vec3d pos, vec3d target, vec3d up) {
 
 Mat4 getQuickInverse(Mat4 m) {
 	Mat4 res;
-	res.v[0][0]=m.v[0][0], res.v[0][1]=m.v[1][0], res.v[0][2]=m.v[2][0], res.v[0][3]=0.f;
-	res.v[1][0]=m.v[0][1], res.v[1][1]=m.v[1][1], res.v[1][2]=m.v[2][1], res.v[1][3]=0.f;
-	res.v[2][0]=m.v[0][2], res.v[2][1]=m.v[1][2], res.v[2][2]=m.v[2][2], res.v[2][3]=0.f;
-	res.v[3][0]=-(m.v[3][0]*res.v[0][0]+m.v[3][1]*res.v[1][0]+m.v[3][2]*res.v[2][0]);
-	res.v[3][1]=-(m.v[3][0]*res.v[0][1]+m.v[3][1]*res.v[1][1]+m.v[3][2]*res.v[2][1]);
-	res.v[3][2]=-(m.v[3][0]*res.v[0][2]+m.v[3][1]*res.v[1][2]+m.v[3][2]*res.v[2][2]);
-	res.v[3][3]=1.f;
+	res(0, 0)=m(0, 0), res(0, 1)=m(1, 0), res(0, 2)=m(2, 0), res(0, 3)=0.f;
+	res(1, 0)=m(0, 1), res(1, 1)=m(1, 1), res(1, 2)=m(2, 1), res(1, 3)=0.f;
+	res(2, 0)=m(0, 2), res(2, 1)=m(1, 2), res(2, 2)=m(2, 2), res(2, 3)=0.f;
+	res(3, 0)=-(m(3, 0)*res(0, 0)+m(3, 1)*res(1, 0)+m(3, 2)*res(2, 0));
+	res(3, 1)=-(m(3, 0)*res(0, 1)+m(3, 1)*res(1, 1)+m(3, 2)*res(2, 1));
+	res(3, 2)=-(m(3, 0)*res(0, 2)+m(3, 1)*res(1, 2)+m(3, 2)*res(2, 2));
+	res(3, 3)=1.f;
 	return res;
 }
 
 int main() {
-	const size_t uTestWidth=5;
-	const size_t uTestHeight=5;
-
 	//sfml setup
 	const size_t uWidth=1000;
 	const size_t uHeight=800;
-	RenderWindow rWindow(
-		VideoMode(uWidth, uHeight), "3D Engine", Style::Titlebar|Style::Close);
+	RenderWindow rWindow(VideoMode(uWidth, uHeight), "3D Engine", Style::Titlebar|Style::Close);
 	Clock cDeltaClock;
 
 	//prog setup
 	mesh mMainMesh;
 	if (mMainMesh.loadFromFile("obj/table.obj")) {
 		for (auto& tTri:mMainMesh.tris) {
-			vec3d tNorm=normalize(cross(tTri.p[1]-tTri.p[0], tTri.p[2]-tTri.p[0]));
-			float r=tNorm.x*.5+.5;
-			float g=tNorm.y*.5+.5;
-			float b=tNorm.z*.5+.5;
-			tTri.col=Color(r*255, g*255, b*255);
+			vec3d col=128+127*normalize(cross(tTri.p[1]-tTri.p[0], tTri.p[2]-tTri.p[0]));
+			tTri.col=Color(col.x, col.y, col.z);
 		}
 	} else {
 		printf("Error: couldn't load file.");

@@ -7,10 +7,10 @@ using namespace common;
 
 #include <random>
 std::mt19937_64 generator(time(NULL));
-std::uniform_real_distribution<float> diastribution(0, 1);
+std::uniform_real_distribution<float> distribution(0, 1);
 
 inline float rand01() {
-	return diastribution(generator);
+	return distribution(generator);
 }
 
 void randomize(const Matrix& m) {
