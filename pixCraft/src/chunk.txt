@@ -1,0 +1,25 @@
+#pragma once
+#ifndef CHUNK_H
+#define CHUNK_H
+
+enum BlockProps {
+	None=0b00000000,
+	Down=0b00000001,
+	Side=0b00000010,
+	Diag=0b00000100
+};
+
+enum BlockType {
+	Sand=BlockProps::Down|BlockProps::Diag,
+	Gravel=BlockProps::Down|BlockProps::Diag
+};
+
+struct Chunk {
+	static const size_t size=16;
+	size_t sI, sJ;
+	Block currGrid[size*size];
+	Chunk* neighbors[8]{nullptr};
+
+	std::vector<std::pair<size_t, size_t>> 
+};
+#endif

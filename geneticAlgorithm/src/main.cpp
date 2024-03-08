@@ -31,7 +31,7 @@ int main() {
 int main() {
 	srand(time(NULL));
 
-	Population p("The quick brown fox jumped over the lazy dog", 500, 0.01f);
+	Population p("The quick brown fox jumped over the lazy dog", 600, 0.01f);
 	for (size_t k=0; k<2500; k++) {
 		std::cout<<k<<": ";
 

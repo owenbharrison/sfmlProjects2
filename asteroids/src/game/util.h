@@ -1,19 +1,17 @@
+//why not
 #pragma once
 #ifndef UTIL_H
 #define UTIL_H
 
-#include <cstdlib>
+#include <random>
 
 #include "math/float2.h"
-using namespace common;
 
-constexpr float PI=3.1415927f;
+static const float PI=3.1415927f;
 
 inline float rand01() {
-	return rand()/float(RAND_MAX);
-}
-
-inline Float2 polarToCartesian(float rad, float angle) {
-	return rad*Float2(cosf(angle), sinf(angle));
+	static std::mt19937_64 generator(time(NULL));
+	static std::uniform_real_distribution<float> dist(0, 1);
+	return dist(generator);
 }
 #endif

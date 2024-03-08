@@ -35,7 +35,7 @@ struct NeuralNet {
 		return 1/(1+expf(-x));
 	}
 
-	static UnaryFloatFunc ddx(UnaryFloatFunc func) {
+	static FloatFunc ddx(FloatFunc func) {
 		return [func] (float x) {
 			const float h=.00001f;
 			return (func(x+h)-func(x))/h;
@@ -55,7 +55,7 @@ struct NeuralNet {
 
 	size_t numLayers, inputSz, outputSz;
 	Matrix* weights, * biases;
-	UnaryFloatFunc hiddenActivation=reLu;
+	FloatFunc hiddenActivation=reLu;
 	std::function<Matrix(const Matrix&)> outputActivation=softmax;
 
 	NeuralNet() :numLayers(0), inputSz(0), outputSz(0), weights(nullptr), biases(nullptr) {}

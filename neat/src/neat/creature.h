@@ -4,8 +4,11 @@
 
 #include "brain.h"
 
-struct Creature {
-	Brain brain;
+template<size_t In>
+struct Ship {//phenotype
+	Brain<In, 3> brain;//genotype
 	//pos, vel, rot, fov, blah, blah
+
+	Creature() {}
 };
 #endif

@@ -155,8 +155,8 @@ struct NeuralNetDemo : GameEngine {
 		//drag and update pixels
 		for (size_t i=0; i<gridLen; i++) {
 			Uint8 p=255*clamp(grid[i], 0, 1);
-			pixels[i*4]=pixels[i*4+1]=pixels[i*4+2]=p;
-			pixels[i*4+3]=255;
+			pixels[4*i]=pixels[i*4+1]=pixels[2+4*i]=p;
+			pixels[3+4*i]=255;
 		}
 		gridTex.update(pixels);
 		gridShader.setUniform("MainTex", gridTex);

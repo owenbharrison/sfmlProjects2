@@ -142,13 +142,13 @@
     <ClCompile Include="src\main.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="src\aStarNavDemo.h" />
-    <ClInclude Include="src\graph.h" />
-  </ItemGroup>
-  <ItemGroup>
     <ProjectReference Include="..\common\common.vcxproj">
       <Project>{aecd3fdf-98a3-413f-be07-d414243f24b8}</Project>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="src\aStarNav.h" />
+    <ClInclude Include="src\matrix.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

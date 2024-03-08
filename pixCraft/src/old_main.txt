@@ -1,0 +1,446 @@
+#include <iostream>
+#include <random>
+
+#include <vector>
+#include <algorithm>
+
+#include "engine/gameEngine.h"
+#include "io/stopwatch.h"
+using namespace common;
+using namespace sf;
+
+#include "block.h"
+
+static std::mt19937 RandomGenerator(time(NULL));
+inline float randFloat(float a=0, float b=1) {
+	static std::uniform_real_distribution<float> dist(a, b);
+	return dist(RandomGenerator);
+}
+
+inline size_t randInt(size_t n) {
+	static std::uniform_int_distribution<size_t> dist(0, n);
+	return dist(RandomGenerator);
+}
+
+inline Color lerpCol(Color a, Color b, float t) {
+	Color c=b-a;
+	return a+Color(t*c.r, t*c.g, t*c.b, t*c.a);
+}
+
+#define SHADER
+struct PixCraft : GameEngine {
+	size_t numX=0, numY=0;
+	inline bool inRange(int i, int j) const { return i>=0&&j>=0&&i<numX&&j<numY; }
+	inline int IX(int i, int j) const { return i+numX*j; }
+	Block* currGrid=nullptr;
+	bool* meshed=nullptr;
+
+#ifdef SHADER
+	Uint8* pixels=nullptr;
+	Texture gridTex;
+	Shader gridShader;
+#endif
+
+	Stopwatch updateWatch, renderWatch;
+
+	float timer=0;
+	size_t numUpdates=0;
+
+	PixCraft(size_t w, size_t h, std::string t) : GameEngine(w, h, t) {}
+
+	~PixCraft() {
+		delete[] currGrid;
+		delete[] meshed;
+
+#ifdef SHADER
+		delete[] pixels;
+#endif
+	}
+
+	bool init() override {
+		//init grids(add sum of sines)
+		const float size=10;
+		numX=width/size, numY=height/size;
+		currGrid=new Block[numX*numY];
+		meshed=new bool[numX*numY];
+		resetGrid();
+
+#ifdef SHADER
+		//init shaders
+		pixels=new Uint8[4*numX*numY]{255};
+		if (!gridTex.create(numX, numY)) return false;
+		if (!gridShader.loadFromFile("shader/identity.glsl", Shader::Fragment)) return false;
+		gridShader.setUniform("Resolution", Vector2f(width, height));
+#endif
+
+		return true;
+	}
+
+	void resetGrid() {
+		//reset all "values"
+		for (size_t i=0; i<numX*numY; i++) currGrid[i].val=0;
+
+		//set border
+		for (size_t i=0; i<numX; i++) {
+			currGrid[IX(i, 0)].type=currGrid[IX(i, numY-1)].type=Block::Border;
+		}
+		for (size_t j=0; j<numY; j++) {
+			currGrid[IX(0, j)].type=currGrid[IX(numX-1, j)].type=Block::Border;
+		}
+
+		//terrain "generation"
+		const float off=randFloat(-5000, 5000);
+		for (size_t i=1; i<numX-1; i++) {
+			//sum of sines
+			float x=off+float(i)/numX, y=0;
+			float amp=.2f*numY, freq=1;
+			for (size_t j=0; j<8; j++) {
+				y+=amp*sinf(freq*x);
+				amp/=2, freq*=2;
+			}
+			y+=.65f*numY;
+
+			for (size_t j=1; j<numY-1; j++) {
+				currGrid[IX(i, j)].type=j<y?Block::Air:Block::Dirt;
+			}
+		}
+	}
+
+	void onKeyDown(Keyboard::Key key) override {
+		switch (key) {
+			case Keyboard::Delete:
+				for (size_t i=0; i<numX*numY; i++) {
+					currGrid[i].type=Block::Air;
+					currGrid[i].val=0;
+				}
+				break;
+			case Keyboard::Home: resetGrid(); break;
+		}
+	}
+
+	void update(float dt) override {
+		updateWatch.start();
+
+		//user input
+		int mI=mousePos.x/width*numX;
+		int mJ=mousePos.y/height*numY;
+
+		bool toPlace=true; Block::Type saidType; float saidVal=0; int placeRad;
+		if (Keyboard::isKeyPressed(Keyboard::A)) saidType=Block::Air, placeRad=5;
+		else if (Keyboard::isKeyPressed(Keyboard::D)) saidType=Block::Dirt, placeRad=4;
+		else if (Keyboard::isKeyPressed(Keyboard::S)) saidType=Block::Sand, placeRad=1;
+		else if (Keyboard::isKeyPressed(Keyboard::W)) saidType=Block::Water, placeRad=3;
+		else if (Keyboard::isKeyPressed(Keyboard::L)) saidType=Block::Lava, placeRad=2;
+		else if (Keyboard::isKeyPressed(Keyboard::G)) saidType=Block::Air, saidVal=1, placeRad=3;
+		else toPlace=false;
+		if (toPlace) {//circle
+			for (int dx=-placeRad; dx<=placeRad; dx++) {
+				for (int dy=-placeRad; dy<=placeRad; dy++) {
+					int i=mI+dx, j=mJ+dy;//avoid border
+					if (i>0&&j>0&&i<numX-1&&j<numY-1) {
+						if (dx*dx+dy*dy<placeRad*placeRad) {
+							currGrid[IX(i, j)].type=saidType;
+							currGrid[IX(i, j)].val=saidVal;
+						}
+					}
+				}
+			}
+		}
+
+		//update grid n times per second.
+		while (timer<0) {
+			const float fixedDt=1/60.f;
+			timer+=fixedDt;
+
+			//update values based on type
+			for (size_t i=0; i<numX*numY; i++) {
+				auto& cr=currGrid[i];
+				switch (cr.type) {
+					case Block::Water: case Block::Lava:
+						cr.val*=1-fixedDt;
+						break;
+					case Block::Air:
+						cr.val*=1-pow(fixedDt, 1.5f);
+						break;
+				}
+			}
+
+			//lastly do the swapping.
+			std::vector<std::pair<Block&, Block&>> swaps;
+			const bool oddUpdate=numUpdates%2, flipY=randFloat()<.5f;
+			for (size_t j=flipY?numY-2:1; flipY?j>=1:j<numY-2; j+=flipY?-1:1) {
+				const bool flipX=randFloat()<.5f;
+				for (size_t i=flipX?numX-2:1; flipX?i>=1:i<numX-2; i+=flipX?-1:1) {
+					const size_t ctr=IX(i, j);
+					Block* toSwap=nullptr;
+					switch (currGrid[ctr].type) {
+						case Block::Sand: {//sediment is denser than "fluid"
+							if (currGrid[IX(i, j+1)].isDisplacable()) toSwap=&currGrid[IX(i, j+1)];
+							else {//check sides BEFORE diagonals
+								const int dir=randFloat()<.5f?-1:1;
+								if (currGrid[IX(i-dir, j)].isDisplacable()) {
+									if (currGrid[IX(i-dir, j+1)].isDisplacable()) toSwap=&currGrid[IX(i-dir, j+1)];
+								} else if (currGrid[IX(i+dir, j)].isDisplacable()) {
+									if (currGrid[IX(i+dir, j+1)].isDisplacable()) toSwap=&currGrid[IX(i+dir, j+1)];
+								}
+							}
+
+							//unsettle fluids
+							break;
+						}
+						case Block::Water: case Block::Lava: {
+							//lava+water=obsidian+smoke
+							if (currGrid[ctr].type==Block::Lava) {
+								bool toMix=false;
+								for (size_t a=0; a<4; a++) {
+									size_t aI=i, aJ=j;
+									switch (a) {
+										case 0: aI--; break;
+										case 1: aJ--; break;
+										case 2: aI++; break;
+										case 3: aJ++; break;
+									}
+									const size_t aK=IX(aI, aJ);
+									if (currGrid[aK].type==Block::Water) {
+										currGrid[aK].type=Block::Air;
+										currGrid[aK].val=1;
+										toMix=true;
+									}
+								}
+								if (toMix) currGrid[ctr].type=Block::Obsidian, currGrid[ctr].val=0;
+
+								//only move lava half as much?
+								if (oddUpdate) break;
+							}
+
+							//flow
+							if (currGrid[IX(i, j+1)].type==Block::Air) toSwap=&currGrid[IX(i, j+1)];
+							else {//obfuscation for NO reason AT ALL
+								const int dir=randFloat()<.5f?-1:1;
+
+								if (currGrid[IX(i-dir, j)].type==Block::Air) {
+									toSwap=&currGrid[IX(i-dir, j+(currGrid[IX(i-dir, j+1)].type==Block::Air))];
+								} else if (currGrid[IX(i+dir, j)].type==Block::Air) {
+									toSwap=&currGrid[IX(i+dir, j+(currGrid[IX(i+dir, j+1)].type==Block::Air))];
+								}
+							}
+
+							break;
+						}
+						case Block::Air: {
+							const auto& val=currGrid[ctr].val;
+
+							//"denser air" rises?
+							const size_t up=IX(i, j-1);
+							if (currGrid[up].type==Block::Air&&currGrid[up].val<val) toSwap=&currGrid[up];
+							else {
+								const int dir=randFloat()<.5f?-1:1;
+								if (currGrid[IX(i-dir, j)].type==Block::Air&&currGrid[IX(i-dir, j)].val<val) {
+									bool diag=currGrid[IX(i-dir, j-1)].type==Block::Air&&currGrid[IX(i-dir, j-1)].val<val;
+									toSwap=&currGrid[IX(i-dir, j-diag)];
+								} else if (currGrid[IX(i+dir, j)].type==Block::Air&&currGrid[IX(i+dir, j)].val<val) {
+									bool diag=currGrid[IX(i+dir, j-1)].type==Block::Air&&currGrid[IX(i+dir, j-1)].val<val;
+									toSwap=&currGrid[IX(i+dir, j-diag)];
+								}
+							}
+
+							break;
+						}
+					}
+					if (toSwap) {
+						auto& a=*toSwap, & b=currGrid[ctr];
+						if (a.isFluid()) a.val=1;
+						if (b.isFluid()) b.val=1;
+
+						swaps.emplace_back(a, b);
+					}
+				}
+			}
+
+			for (auto& s:swaps) std::swap(s.first, s.second);
+
+			numUpdates++;
+		}
+		timer-=dt;
+
+		updateWatch.stop();
+	}
+
+	void render() {
+		renderWatch.start();
+
+#ifdef SHADER
+		//maybe just use rectangles?
+		for (size_t j=0; j<numY; j++) {
+			for (size_t i=0; i<numX; i++) {
+				Uint8 r=0, g=0, b=0;
+				const auto& cu=currGrid[IX(i, j)];
+				switch (cu.type) {
+					case Block::Air://blue to brown gradient
+						r=34, g=135, b=201;
+						r+=cu.val*(128-r), g+=cu.val*(116-g), b+=cu.val*(94-b);
+						break;
+					case Block::Dirt:
+						r=143, g=83, b=27;
+
+						if (j>0) {//check above to make grass
+							const auto& up=currGrid[IX(i, j-1)];
+							if (up.type==Block::Air||up.type==Block::Water) {
+								r=12, g=138, b=33;
+							}
+						}
+						break;
+					case Block::Sand: r=230, g=211, b=138; break;
+					case Block::Water://white to blue gradient
+						r=27, g=74, b=194;
+						r+=cu.val*(171-r), g+=cu.val*(227-g), b+=cu.val*(255-b);
+						break;
+					case Block::Lava://yellow to red gradient
+						r=215+29*cu.val, g=199*cu.val, b=0;
+						break;
+					case Block::Obsidian://purplish black
+						r=33, g=0, b=59;
+						break;
+				}
+				size_t k=i+numX*j;
+				pixels[4*k]=r, pixels[1+4*k]=g, pixels[2+4*k]=b;
+				pixels[3+4*k]=255;
+			}
+		}
+		gridTex.update(pixels);
+		gridShader.setUniform("MainTex", gridTex);
+		draw(RectangleShape(Vector2f(width, height)), &gridShader);
+#elif 0
+		const float szX=width/float(numX), szY=height/float(numY);
+		RectangleShape rect(Vector2f(szX, szY));
+		for (size_t i=0; i<numX; i++) {
+			for (size_t j=0; j<numY; j++) {
+				const auto& curr=currGrid[IX(i, j)];
+				rect.setPosition(szX*i, szY*j);
+
+				Color col;
+				switch (curr.type) {
+					case Block::Air:
+						col=lerpCol(
+							Color(0x2287C9FF),
+							Color(0x7C5715FF),
+							curr.val
+						);
+						break;
+					case Block::Dirt:
+						col=Color(0x8F531BFF);
+						if (j>0) {
+							const auto& up=currGrid[IX(i, j-1)];
+							if (up.type==Block::Air||up.type==Block::Water) {
+								col=Color(0x0C8A21FF);
+							}
+						}
+						break;
+					case Block::Sand:
+						col=Color(0xE6D38AFF);
+						break;
+					case Block::Water:
+						col=lerpCol(
+							Color(0x1B4AC2FF),
+							Color(0xABE3FFFF),
+							curr.val
+						);
+						break;
+					case Block::Lava:
+						col=lerpCol(
+							Color(0xD70000FF),
+							Color(0xF2C700FF),
+							curr.val
+						);
+						break;
+					case Block::Obsidian:
+						col=Color(0x21003BFF);
+						break;
+				}
+				rect.setFillColor(col);
+				rect.setOutlineColor(Color::Black);
+
+				draw(rect);
+			}
+		}
+#else
+		auto getCol=[this] (size_t i, size_t j) {
+			Color col;
+			const auto& curr=currGrid[IX(i, j)];
+			switch (curr.type) {
+				case Block::Air:
+					col=lerpCol(
+						Color(0x2287C9FF),
+						Color(0x7C5715FF),
+						curr.val
+					);
+					break;
+				case Block::Dirt:
+					col=Color(0x8F531BFF);
+					if (j>0) {
+						const auto& up=currGrid[IX(i, j-1)];
+						if (up.type==Block::Air||up.type==Block::Water) {
+							col=Color(0x0C8A21FF);
+						}
+					}
+					break;
+				case Block::Sand:
+					col=Color(0xE6D38AFF);
+					break;
+				case Block::Water:
+					col=lerpCol(
+						Color(0x1B4AC2FF),
+						Color(0xABE3FFFF),
+						curr.val
+					);
+					break;
+				case Block::Lava:
+					col=lerpCol(
+						Color(0xD70000FF),
+						Color(0xF2C700FF),
+						curr.val
+					);
+					break;
+				case Block::Obsidian:
+					col=Color(0x21003BFF);
+					break;
+			}
+			return col;
+		};
+		const float szX=width/float(numX), szY=height/float(numY);
+		RectangleShape baseRect(Vector2f(szX, szY));
+		memset(meshed, false, sizeof(bool)*numX*numY);
+		auto meshable=[this] (size_t i, size_t j) {
+			size_t k=IX(i, j);
+			return !meshed[k]&&!currGrid[k].isDisplacable();
+		};
+		size_t iSt, jSt;
+		for (size_t i=0; i<numX; i++) {
+			for (size_t j=0; j<numY; j++) {
+				if (!meshable(i, j)) {
+					baseRect.setPosition(szX*i, szY*j);
+					baseRect.setFillColor(getCol(i, j));
+					draw(baseRect);
+				}
+				iSt=i, jSt=j;
+
+			}
+		}
+#endif
+
+
+
+		renderWatch.stop();
+		if (Keyboard::isKeyPressed(Keyboard::Tab)) {
+			std::cout<<"Update: "<<updateWatch.getMicros()<<"us Render: "<<renderWatch.getMicros()<<"us"<<std::endl;
+		}
+	}
+};
+
+int main() {
+	PixCraft game(820, 540, "Sand & Water Sim");
+	//game.setFramerateLimit(120);
+	game.run();
+
+	return 0;
+}

@@ -1,7 +1,6 @@
 #include "matrix.h"
 
 #define DOFORALL(x) {for(size_t i=0;i<m*n;i++)x}
-
 namespace common {
 	Matrix::Matrix() : m(0), n(0), v(nullptr) {}
 
@@ -42,7 +41,7 @@ namespace common {
 		return v[i*n+j];
 	}
 
-	Matrix Matrix::forEach(UnaryFloatFunc func) {
+	Matrix Matrix::forEach(FloatFunc func) {
 		Matrix b(m, n);
 		for (size_t i=0; i<m*n; i++) b.v[i]=func(v[i]);
 		return b;

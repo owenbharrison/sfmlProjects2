@@ -27,12 +27,12 @@ int main() {
 	window.setFramerateLimit(165);
 	Clock deltaClock;
 	float totalDeltaTime=0;
-	float FruitTimer=0, sliceTimer=0;
+	float fruitTimer=0, sliceTimer=0;
 
 	//basic prog setup
 	Float2 grav(0, 130);
 	AABB bounds(Float2(0), Float2(width, height));
-	std::list<Fruit> Fruits;
+	std::list<Fruit> fruits;
 	std::list<FX> effects;
 
 	bool toSlice=false;
@@ -100,7 +100,7 @@ int main() {
 		float deltaTime=MIN(actualDeltaTime, 1/60.f);
 		totalDeltaTime+=actualDeltaTime;
 		std::string fpsStr=std::to_string(int(1/actualDeltaTime))+"fps";
-		window.setTitle("Fruit Ninja @ "+fpsStr+" w/ "+std::to_string(Fruits.size())+"Fruits & "+std::to_string(effects.size())+"FX");
+		window.setTitle("Fruit Ninja @ "+fpsStr+" w/ "+std::to_string(fruits.size())+"Fruits & "+std::to_string(effects.size())+"FX");
 
 		//start USER_INPUT
 		bool toSliceTemp=Mouse::isButtonPressed(Mouse::Left);
@@ -121,7 +121,7 @@ int main() {
 			}
 
 			//only check while slicing.
-			for (auto it=Fruits.begin(); it!=Fruits.end();) {
+			for (auto it=fruits.begin(); it!=fruits.end();) {
 				auto& f=*it;
 				if (f.sliced) {
 					it++;
@@ -185,7 +185,7 @@ int main() {
 						for (auto& p:ch.pts) p-=avg;
 						ch.pos+=rotVec(avg, ch.rot);
 
-						Fruits.push_front(ch);
+						fruits.push_front(ch);
 					}
 
 					{//scoring
@@ -217,18 +217,18 @@ int main() {
 						}
 					}
 
-					it=Fruits.erase(it);
+					it=fruits.erase(it);
 				} else it++;
 			}
 
 			//manage slice length
-			if (slice.size()>50) slice.erase(slice.begin());
+			if (slice.size()>30) slice.erase(slice.begin());
 		}
 		sliceTimer+=deltaTime;
 
 		//every now and then throw a Fruit from the bottom
-		if (FruitTimer>1) {
-			FruitTimer-=.6f+.6f*RANDOM;
+		if (fruitTimer>1) {
+			fruitTimer-=.6f+.6f*RANDOM;
 
 			float heading=PI*.25f*(5+2*RANDOM);
 			float speed=240+100*RANDOM;
@@ -241,12 +241,12 @@ int main() {
 				float rad=20+30*RANDOM;
 				fTemp.pts.push_back(Float2(cosf(angle), sinf(angle))*rad);
 			}
-			Fruits.push_back(fTemp);
+			fruits.push_back(fTemp);
 		}
-		FruitTimer+=deltaTime;
+		fruitTimer+=deltaTime;
 
 		//Fruit dynamics(space pause debug)
-		if (!Keyboard::isKeyPressed(Keyboard::Space)) for (auto it=Fruits.begin(); it!=Fruits.end();) {
+		if (!Keyboard::isKeyPressed(Keyboard::Space)) for (auto it=fruits.begin(); it!=fruits.end();) {
 			auto& f=*it;
 			f.rotVel*=1-.3f*deltaTime;
 			f.accelerate(grav);
@@ -254,7 +254,7 @@ int main() {
 
 			//remove if offscreen
 			AABB fBounds=f.getAABB();
-			if (fBounds.max.x<0||fBounds.min.x>width||fBounds.min.y>height) it=Fruits.erase(it);
+			if (fBounds.max.x<0||fBounds.min.x>width||fBounds.min.y>height) it=fruits.erase(it);
 			else it++;
 		}
 
@@ -285,7 +285,7 @@ int main() {
 		}
 
 		//draw Fruits
-		for (const auto& f:Fruits) {
+		for (const auto& f:fruits) {
 			Color colToUse=f.sliced?Color(20, 190, 50):Color(20, 20, 190);
 
 			int len=f.pts.size();

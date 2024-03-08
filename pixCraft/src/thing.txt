@@ -1,0 +1,139 @@
+//https://winter.dev/articles/falling-sand
+
+#include <vector>
+#include <algorithm>
+#include <random>
+
+static std::mt19937_64 RandomGenerator;
+//inclusive
+inline size_t randInt(size_t n) {
+	static std::uniform_int_distribution<size_t> dist(0, n);
+	return dist(RandomGenerator);
+}
+
+//does this cell move, if so, how?
+enum BlockProps {
+	None=0b00000000,
+	Down=0b00000001,
+	Side=0b00000010,
+	Diag=0b00000100
+};
+
+//combine props
+inline BlockProps operator|(BlockProps a, BlockProps b) {
+	return BlockProps(int(a)|int(b));
+}
+
+//check props one by one
+inline auto operator&(BlockProps a, BlockProps b) {
+	return int(a)&int(b);
+}
+
+enum BlockType {
+	Empty,
+	Dirt,
+	Water,
+	Sand
+};
+
+struct Color {
+	unsigned char r=b, g=b, b=0;
+	unsigned char a=255;
+};
+
+struct Block {
+	BlockType type=BlockType::Empty;
+	BlockProps properties=BlockProps::None;
+	Color col;
+};
+
+static const Block Sand{
+	BlockType::Sand,
+	BlockProps::Down|BlockProps::Diag,
+	Color{250, 230, 40}
+}, Dirt{BlockType::None};
+
+//i love one-use classes!
+//bloatware <3
+class World {
+	Block* blocks=nullptr;
+	//from->to
+	std::vector<std::pair<size_t, size_t>> changes;
+public:
+	const size_t numX=0, numY=0;
+
+	World(size_t x, size_t y) : numX(x), numY(y) {
+		blocks=new Block[numX*numY];
+	}
+
+	~World() {
+		delete[] blocks;
+	}
+
+	inline size_t IX(size_t i, size_t j) {
+		return i+numX*j;
+	}
+
+	inline Block& getBlock(size_t i, size_t j) {
+		return blocks[IX(i, j)];
+	}
+
+	inline bool inBounds(size_t i, size_t j) {
+		return i>=0&&j>=0&&i<numX&&j<numY;
+	}
+
+	inline bool isEmpty(size_t i, size_t j) {
+		return inBounds(i, j)&&getBlock(i, j).type==BlockType::Empty;
+	}
+
+	inline void moveBlock(size_t x, size_t y, size_t xTo, size_t yTo) {
+		changes.emplace_back(IX(x, y), IX(xTo, yTo));
+	}
+
+	inline bool moveDown(size_t x, size_t y, Block& block) {
+		if (isEmpty(x, y-1)) {
+			moveBlock(x, y, x, y-1);
+			return true;
+		}
+		return false;
+	}
+
+	inline bool moveSide()
+
+	void change() {
+		//remove changes with filled dst
+		for (auto it=changes.begin(); it!=changes.end();) {
+			auto& chg=*it;
+			if (blocks[chg.second].type!=BlockType::Empty) {
+				it=changes.erase(it);
+			} else it++;
+		}
+
+		//sort by dst
+		std::sort(changes.begin(), changes.end(),
+			[] (auto& a, auto& b) { return a.second<b.second; }
+		);
+
+		//pick rand src
+		changes.emplace_back(-1, -1);//final move
+		for (size_t i=0, iPrev=0; i<changes.size()-1; i++) {
+			//different dst?
+			if (changes[i+1].second!=changes[i].second) {
+				size_t rnd=iPrev+randInt(i-iPrev);
+
+				size_t src=changes[rnd].first, dst=changes[i].second;
+
+				blocks[dst]=blocks[src];
+				blocks[src]=Block();
+
+				iPrev=i+1;
+			}
+		}
+		changes.clear();
+	}
+
+	void update() {
+		//yap
+		change();
+	}
+};

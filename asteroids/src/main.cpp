@@ -1,8 +1,8 @@
-#include "asteroidsDemo.h"
+#include "asteroidsAIDemo.h"
 
 int main() {
-	AsteroidsDemo demo(640, 480, "Asteroids Game");
-	demo.setFramerateLimit(120);
+	AsteroidsAIDemo demo(400, 300, "Asteroids AI");
+	demo.setFramerateLimit(500);
 	demo.run();
 
 	return 0;

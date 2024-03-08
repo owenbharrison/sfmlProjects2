@@ -52,7 +52,7 @@ Matrix<M, P> operator*(const Matrix<M, N>& a, const Matrix<N, P>& b) {
 			r(i, j)=sum;
 		}
 	}
-	return ab;
+	return r;
 }
 
 //flip about y=x

@@ -24,7 +24,7 @@ Float2 getClosePt(Float2 a, Float2 b, Float2 p) {
 	return a+t*ba;
 }
 
-const std::vector<Color> stressGradient{
+static const std::vector<Color> stressGradient{
 	Color::Blue,
 	Color::Cyan,
 	Color::Green,
@@ -449,6 +449,13 @@ struct VerletIntegrationDemo : GameEngine {
 						float rad=(.5f+.5f*rand01())*Particle::defRad;
 						for (const auto& p:particles) {
 							if (length(pos-p.pos)<rad+p.rad) {
+								toAdd=false;
+								break;
+							}
+						}
+						if (toAdd) for (const auto& c:constraints) {
+							Float2 pt=getClosePt(c.a->pos, c.b->pos, pos);
+							if (length(pos-pt)<rad+c.rad) {
 								toAdd=false;
 								break;
 							}

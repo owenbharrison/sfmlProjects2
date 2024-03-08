@@ -29,10 +29,16 @@
     <ClInclude Include="src\neat\brain.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\neat2\brain.h">
+    <ClInclude Include="src\neat\neuron.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\neat2\brain2.h">
+    <ClInclude Include="src\neat\synapse.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\neat\randUtil.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\neat\brain2.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

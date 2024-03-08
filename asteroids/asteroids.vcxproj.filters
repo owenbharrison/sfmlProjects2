@@ -23,23 +23,32 @@
     <ClInclude Include="src\game\asteroid.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\asteroidsDemo.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\game\bullet.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\game\particle.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="src\game\particleSystem.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\game\ship.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\asteroidsAIDemo.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\neat\brain.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\game\bullet.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\brain.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\game.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="src\game\util.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Font Include="arial.ttf" />
   </ItemGroup>
 </Project>

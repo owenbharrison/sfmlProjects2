@@ -162,18 +162,23 @@
     <ClCompile Include="src\main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\brain.h" />
+    <ClInclude Include="src\game.h" />
     <ClInclude Include="src\game\asteroid.h" />
-    <ClInclude Include="src\asteroidsDemo.h" />
+    <ClInclude Include="src\asteroidsAIDemo.h" />
     <ClInclude Include="src\game\bullet.h" />
-    <ClInclude Include="src\game\particle.h" />
     <ClInclude Include="src\game\particleSystem.h" />
-    <ClInclude Include="src\game\ship.h" />
     <ClInclude Include="src\game\util.h" />
+    <ClInclude Include="src\neat\brain.h" />
+    <ClInclude Include="src\game\ship.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\common\common.vcxproj">
       <Project>{aecd3fdf-98a3-413f-be07-d414243f24b8}</Project>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Font Include="arial.ttf" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

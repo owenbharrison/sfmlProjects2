@@ -1,6 +1,6 @@
 #pragma once
-#ifndef Float2_H
-#define Float2_H
+#ifndef FLOAT2_H
+#define FLOAT2_H
 
 #include <cmath>
 
@@ -45,9 +45,9 @@ namespace common {
 	Float2 operator*(float f, const Float2 o);
 	Float2 operator/(float f, const Float2 o);
 
-	float dot(const Float2 a, const Float2 b);
+	inline float dot(const Float2 a, const Float2 b);
 
-	float length(const Float2 f);
+	inline float length(const Float2 f);
 
 	Float2 normal(const Float2 f);
 

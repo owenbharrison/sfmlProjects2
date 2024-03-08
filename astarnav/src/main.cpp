@@ -1,7 +1,8 @@
-#include "aStarNavDemo.h"
+#include "aStarNav.h"
 
 int main() {
-	AStarNavDemo demo(640, 480, "A* Navigation");
+	AStarNav demo(480, 480, "A* Navigation");
+	demo.setFramerateLimit(60);
 	demo.run();
 
 	return 0;

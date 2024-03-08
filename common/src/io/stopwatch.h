@@ -1,6 +1,6 @@
 #pragma once
-#ifndef Stopwatch_H
-#define Stopwatch_H
+#ifndef STOPWATCH_H
+#define STOPWATCH_H
 
 #include <chrono>
 

@@ -3,26 +3,37 @@
 #define ASTEROID_H
 
 #include "util.h"
+#include "geom/aabb.h"
+using namespace common;
 
+float clamp(float x, float a, float b) {
+	if (x<a) return a;
+	if (x>b) return b;
+	return x;
+}
+
+//rule of three!!!
 struct Asteroid {
+	static constexpr float RMax=50.3f;
 	Float2 pos, vel;
-	size_t numPoints;
-	Float2* outline;
+	size_t numPts=0;
+	Float2* outline=nullptr;
 
-	Asteroid() : numPoints(0), outline(nullptr) {}
+	Asteroid() {}
 
-	Asteroid(Float2 p, Float2 v, size_t n, float nr, float xr) : pos(p), vel(v), numPoints(n) {
-		outline=new Float2[numPoints];
-		for (size_t i=0; i<numPoints; i++) {
+	Asteroid(Float2 p, Float2 v, size_t n, float nr=26.7f, float xr=RMax) : pos(p), vel(v), numPts(n) {
+		outline=new Float2[numPts];
+
+		for (size_t i=0; i<numPts; i++) {
 			float rad=nr+rand01()*(xr-nr);
-			float angle=2*PI*i/numPoints;
-			outline[i]=polarToCartesian(rad, angle);
+			float angle=2*PI*i/numPts;
+			outline[i]=rad*Float2(cosf(angle), sinf(angle));
 		}
 	}
 
-	Asteroid(const Asteroid& a) : pos(a.pos), vel(a.vel), numPoints(a.numPoints) {
-		outline=new Float2[numPoints];
-		memcpy(outline, a.outline, sizeof(Float2)*numPoints);
+	Asteroid(const Asteroid& a) : pos(a.pos), vel(a.vel), numPts(a.numPts) {
+		outline=new Float2[numPts];
+		memcpy(outline, a.outline, sizeof(Float2)*numPts);
 	}
 
 	~Asteroid() {
@@ -36,46 +47,55 @@ struct Asteroid {
 
 		pos=a.pos;
 		vel=a.vel;
-		numPoints=a.numPoints;
-		outline=new Float2[numPoints];
-		memcpy(outline, a.outline, sizeof(Float2)*numPoints);
+		numPts=a.numPts;
+		outline=new Float2[numPts];
+		memcpy(outline, a.outline, sizeof(Float2)*numPts);
 
 		return *this;
 	}
 
-	void update(float dt) {
-		pos+=vel*dt;
+	inline void update(float dt) {
+		pos+=dt*vel;
 	}
 
-	//polygon raycasting method
-	bool containsPt(Float2 pt) {
+	float getRad() const {
+		float rSum=0;
+		for (size_t i=0; i<numPts; i++) {
+			rSum+=length(outline[i]);
+		}
+		return rSum/numPts;
+	}
+
+	bool split(Asteroid& a, Asteroid& b) const {
+		float rAvg=getRad();
+		if (rAvg<20) return false;
+
+		//speed up by 1.1-1.25x
+		Float2 tang(-vel.y, vel.x);
+		tang*=1.1f+.15f*rand01();
+
+		//min asteroid size
+		size_t num=numPts-2; if (num<4) num=4;
+
+		//two smaller going opposite dirs
+		a=Asteroid(pos, tang, num, rAvg*.7f, rAvg*.85f);
+		b=Asteroid(pos, -tang, num, rAvg*.7f, rAvg*.85f);
+
+		return true;
+	}
+
+	bool containsPt(Float2 pt) const {
 		pt-=pos;//make point local
 
 		size_t num=0;
-		for (size_t i=0; i<numPoints; i++) {
-			Float2 a=outline[i], b=outline[(i+1)%numPoints];
+		for (size_t i=0; i<numPts; i++) {
+			Float2 a=outline[i], b=outline[(i+1)%numPts];
 			Float2 tu=lineLineIntersection(a, b, pt, pt+Float2(1, 0));
 			if (tu.x>=0&&tu.x<=1&&tu.y>=0) num++;
 		}
 
 		//odd num ix
 		return num%2;
-	}
-
-	bool split(Asteroid& a, Asteroid& b) {
-		float totalRad=0;
-		for (size_t i=0; i<numPoints; i++) {
-			totalRad+=length(outline[i]);
-		}
-		float avgRad=totalRad/numPoints;
-		if (avgRad<15) return false;
-
-		Float2 tang(-vel.y, vel.x);
-		tang*=1+.5f*rand01();
-		size_t num=numPoints-2; if (num<5) num=5;
-		a=Asteroid(pos, tang, num, avgRad*.5f, avgRad*.8f);
-		b=Asteroid(pos, -tang, num, avgRad*.5f, avgRad*.8f);
-		return true;
 	}
 };
 #endif

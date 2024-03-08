@@ -34,12 +34,12 @@ namespace common {
 	Float2 operator*(float f, const Float2 o) { return o*f; }
 	Float2 operator/(float f, const Float2 o) { return Float2(f)/o; }
 
-	float dot(const Float2 a, const Float2 b) {
+	inline float dot(const Float2 a, const Float2 b) {
 		Float2 c=a*b;
 		return c.x+c.y;
 	}
 
-	float length(const Float2 f) {
+	inline float length(const Float2 f) {
 		return sqrt(dot(f, f));
 	}
 
